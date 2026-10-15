@@ -537,6 +537,10 @@ body {
 .player {
   position: fixed;
   inset: 0;
+  height: 100vh;            /* respaldo para navegadores antiguos */
+  height: 100dvh;           /* altura REAL visible (descuenta las barras del navegador móvil) */
+  overflow-y: auto;         /* red de seguridad: si algo no cabe, se puede desplazar */
+  overscroll-behavior: contain;
   z-index: 100;
   display: none;
   flex-direction: column;
@@ -680,6 +684,32 @@ body {
   .player-exname { font-size: 28px; }
   .timer-wrap { width: 230px; height: 230px; }
   .timer-num .big { font-size: 60px; }
+}
+
+/* ===================== Reproductor: adaptación a la ALTURA visible (móvil) =====================
+   En móviles las barras del navegador (p. ej. la de abajo en Brave) reducen la altura útil.
+   Aquí el tamaño del círculo, la figura y los márgenes se calcula con dvh para que los
+   botones de pausa / anterior / siguiente siempre queden a la vista. */
+@media (max-height: 860px) {
+  .player-top { padding: 12px 20px; }
+  .pbar { padding: 0 20px; }
+  .player-body { gap: 10px; padding: 8px 20px; }
+  .player-exname { font-size: clamp(22px, 3.6dvh, 30px); }
+  .player-fig { height: min(110px, 13dvh); }
+  .player-fig svg { height: min(110px, 13dvh); }
+  .timer-wrap { width: min(250px, 29dvh); height: min(250px, 29dvh); margin: 0; }
+  .timer-num .big { font-size: clamp(40px, 7.5dvh, 64px); }
+  .player-controls { gap: 16px; padding: 14px 20px calc(30px + env(safe-area-inset-bottom)); }
+  .pctrl.side { width: 54px; height: 54px; }
+  .pctrl.play { width: 76px; height: 76px; }
+}
+@media (max-height: 680px) {
+  .player-top { padding: 8px 16px; }
+  .player-body { gap: 6px; }
+  .player-fig { display: none; }          /* en pantallas muy bajas se prioriza el cronómetro */
+  .timer-wrap { width: min(210px, 32dvh); height: min(210px, 32dvh); }
+  .pctrl.side { width: 48px; height: 48px; }
+  .pctrl.play { width: 66px; height: 66px; }
 }
 
   </style>
