@@ -32,7 +32,710 @@
     desfase, y el aviso sonoro se genera con la Web Audio API (sin archivos).
   ============================================================================
 -->
-<link rel="stylesheet" href="css/styles.css">
+  <style>
+/* ===========================================================================
+   styles.css — Tema oscuro, desktop-first. Sin dependencias externas.
+   =========================================================================== */
+
+:root {
+  --bg:           #0d0f14;
+  --bg-2:         #12151c;
+  --surface:      #181c25;
+  --surface-2:    #1f2430;
+  --surface-3:    #272d3b;
+  --border:       #2a3140;
+  --border-soft:  #222836;
+  --text:         #eef1f7;
+  --text-dim:     #9aa4b8;
+  --text-faint:   #6b7589;
+  --accent:       #5b8def;
+  --accent-2:     #38bdf8;
+  --danger:       #ef4757;
+  --ok:           #2dd4a7;
+  --radius:       16px;
+  --radius-sm:    11px;
+  --shadow:       0 18px 50px -18px rgba(0,0,0,.7);
+  --maxw:         1080px;
+  --font:         -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", "Segoe UI", Roboto, sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  background:
+    radial-gradient(1200px 600px at 80% -10%, rgba(91,141,239,.10), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(45,212,167,.07), transparent 55%),
+    var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100%;
+}
+
+::selection { background: rgba(91,141,239,.35); }
+
+/* ---------- Scrollbar (WebKit / Safari / Chrome) ---------- */
+::-webkit-scrollbar { width: 12px; height: 12px; }
+::-webkit-scrollbar-thumb {
+  background: var(--surface-3);
+  border: 3px solid transparent;
+  background-clip: content-box;
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover { background: #36405380; background-clip: content-box; }
+
+/* ===================== Figuras animadas (ilustración del ejercicio) ===================== */
+/* Las figuras son SVG articulados: cada parte interpola entre dos posiciones
+   con <animate> (SMIL) dentro del propio SVG. Aquí solo se dimensionan.
+   La preferencia "reducir movimiento" se respeta desde JS (figura estática). */
+.anim-fig { display: block; width: 100%; height: 100%; overflow: visible; }
+
+/* ===================== Barra superior ===================== */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  backdrop-filter: saturate(150%) blur(14px);
+  background: rgba(13,15,20,.72);
+  border-bottom: 1px solid var(--border-soft);
+}
+.topbar-inner {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 14px 28px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.back-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background .18s, transform .18s, border-color .18s;
+}
+.back-btn:hover { background: var(--surface-2); border-color: #3a4358; transform: translateX(-2px); }
+.back-btn.show { display: inline-flex; }
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  cursor: pointer;
+  user-select: none;
+  outline: none;
+}
+.brand-mark {
+  display: inline-flex;
+  width: 38px; height: 38px;
+  align-items: center; justify-content: center;
+  border-radius: 12px;
+  color: #fff;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  box-shadow: 0 8px 22px -8px rgba(91,141,239,.8);
+}
+.brand-text {
+  font-size: 19px;
+  font-weight: 800;
+  letter-spacing: -.3px;
+  line-height: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.brand-text small {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+}
+.topbar-title {
+  margin-left: auto;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dim);
+}
+
+/* ===================== Layout general ===================== */
+.app {
+  max-width: var(--maxw);
+  margin: 0 auto;
+  padding: 38px 28px 90px;
+  animation: fade .35s ease;
+}
+@keyframes fade { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+.page-head { margin-bottom: 30px; }
+.page-head h1 {
+  font-size: 34px;
+  font-weight: 800;
+  letter-spacing: -.8px;
+  margin: 0 0 8px;
+  color: #fff;
+}
+.page-head p { margin: 0; color: var(--text-dim); font-size: 15.5px; }
+.page-head-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.page-head-row .btn { flex: none; margin-top: 4px; }
+
+/* ===================== Historial de entrenamientos ===================== */
+.hist-list { display: flex; flex-direction: column; gap: 10px; }
+.hist-card {
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  overflow: hidden;
+}
+.hist-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 14px 16px; cursor: pointer;
+  transition: background .15s;
+}
+.hist-head:hover { background: var(--surface-2); }
+.hist-icon {
+  width: 44px; height: 44px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; border-radius: 12px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.hist-info { flex: 1; min-width: 0; }
+.hist-routine { font-size: 16px; font-weight: 750; color: #fff; }
+.hist-date { font-size: 13px; color: var(--text-dim); margin-top: 2px; text-transform: capitalize; }
+.hist-meta { font-size: 13px; color: var(--text-faint); white-space: nowrap; }
+.hist-meta b { color: var(--text); font-weight: 750; }
+.hist-del {
+  flex: none; width: 36px; height: 36px; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--text-faint); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s, color .15s, border-color .15s;
+}
+.hist-del:hover { background: rgba(239,71,87,.12); color: var(--danger); border-color: var(--danger); }
+.hist-ex {
+  list-style: none; margin: 0; padding: 4px 16px 14px 74px;
+  border-top: 1px solid var(--border-soft);
+}
+.hist-ex li {
+  display: flex; justify-content: space-between; gap: 12px;
+  font-size: 14px; color: var(--text-dim);
+  padding: 5px 0;
+}
+.hist-ex li span { color: var(--text-faint); font-variant-numeric: tabular-nums; }
+
+.empty-box {
+  text-align: center;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 46px 24px;
+  color: var(--text-dim);
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+.empty-emoji { font-size: 44px; }
+.empty-box p { margin: 0; font-size: 15px; line-height: 1.5; }
+
+/* ===================== Home: tarjetas de rutina ===================== */
+.routine-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+.routine-card {
+  position: relative;
+  text-align: left;
+  border: 1px solid var(--border);
+  background: linear-gradient(180deg, var(--surface), var(--bg-2));
+  border-radius: var(--radius);
+  padding: 22px;
+  cursor: pointer;
+  overflow: hidden;
+  transition: transform .2s ease, border-color .2s, box-shadow .2s;
+}
+.routine-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+  background: var(--rc-accent, var(--accent));
+  opacity: .9;
+}
+.routine-card::after {
+  content: "";
+  position: absolute;
+  right: -40px; top: -40px;
+  width: 150px; height: 150px;
+  background: radial-gradient(circle, var(--rc-accent, var(--accent)), transparent 70%);
+  opacity: .14;
+  transition: opacity .25s;
+}
+.routine-card:hover {
+  transform: translateY(-4px);
+  border-color: var(--rc-accent, var(--accent));
+  box-shadow: var(--shadow);
+}
+.routine-card:hover::after { opacity: .28; }
+
+.rc-icon {
+  width: 52px; height: 52px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  margin-bottom: 16px;
+}
+.rc-name { font-size: 19px; font-weight: 800; letter-spacing: -.3px; margin: 0 0 4px; color: #fff; }
+.rc-sub  { font-size: 13.5px; color: var(--text-dim); margin: 0 0 18px; }
+.rc-meta {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 13px; color: var(--text-faint);
+  border-top: 1px solid var(--border-soft);
+  padding-top: 14px;
+}
+.rc-meta b { color: var(--text); font-weight: 700; }
+.rc-meta .dot { width: 4px; height: 4px; border-radius: 50%; background: var(--text-faint); }
+
+/* ===================== Detalle de rutina ===================== */
+.routine-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 24px;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: linear-gradient(120deg, var(--surface), var(--bg-2));
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.routine-header::after {
+  content: "";
+  position: absolute; right: -30px; top: -50px;
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, var(--rc-accent, var(--accent)), transparent 70%);
+  opacity: .18;
+}
+.rh-icon {
+  width: 64px; height: 64px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 32px; border-radius: 18px;
+  background: var(--surface-2); border: 1px solid var(--border);
+}
+.rh-text h1 { margin: 0; font-size: 27px; font-weight: 800; letter-spacing: -.5px; color: #fff; }
+.rh-text .author { display: flex; align-items: center; gap: 8px; margin-top: 6px; color: var(--text-dim); font-size: 14px; }
+.rh-text .author .handle { color: var(--accent-2); }
+.rh-text .sub { color: var(--text-dim); font-size: 14.5px; margin-top: 4px; }
+
+/* Barra de acciones / total */
+.routine-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+  margin: 18px 0 22px;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.routine-actions .total {
+  font-size: 14px; color: var(--text-dim);
+}
+.routine-actions .total b { color: var(--text); font-size: 16px; font-weight: 800; }
+.routine-actions .spacer { flex: 1; }
+
+/* Control del descanso/transición entre ejercicios */
+.rest-setting {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding-left: 14px;
+  border-left: 1px solid var(--border);
+}
+.rest-setting .rest-label {
+  font-size: 13.5px;
+  color: var(--text-dim);
+  font-weight: 600;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .rest-setting { border-left: none; padding-left: 0; }
+}
+
+.btn {
+  display: inline-flex; align-items: center; gap: 9px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 14.5px; font-weight: 650;
+  padding: 11px 18px;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: background .16s, transform .12s, border-color .16s, box-shadow .16s;
+}
+.btn:hover { background: var(--surface-3); }
+.btn:active { transform: scale(.97); }
+.btn.ghost { background: transparent; }
+.btn.primary {
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  box-shadow: 0 12px 26px -12px rgba(91,141,239,.9);
+  font-weight: 750;
+  padding: 13px 26px;
+  font-size: 15.5px;
+}
+.btn.primary:hover { filter: brightness(1.06); }
+.btn svg { width: 18px; height: 18px; }
+
+.section-label {
+  font-size: 13px; font-weight: 700; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--text-faint);
+  margin: 8px 2px 14px;
+}
+
+/* Lista de ejercicios en el detalle */
+.ex-list { display: flex; flex-direction: column; gap: 10px; }
+.ex-row {
+  display: flex; align-items: center; gap: 16px;
+  flex-wrap: wrap;
+  row-gap: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  transition: border-color .16s, background .16s, transform .12s;
+}
+.ex-row:hover { border-color: #38415a; background: var(--surface-2); }
+.ex-index {
+  width: 26px; flex: none;
+  text-align: center;
+  font-size: 13px; font-weight: 800;
+  color: var(--text-faint);
+}
+.ex-icon {
+  width: 56px; height: 56px; flex: none;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 14px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--accent-2);
+}
+.ex-icon svg { width: 42px; height: 42px; }
+.ex-main { flex: 1; min-width: 0; cursor: pointer; }
+.ex-name { font-size: 16px; font-weight: 700; letter-spacing: -.2px; color: #fff; }
+.ex-muscles {
+  margin-top: 5px; display: flex; gap: 6px; flex-wrap: wrap;
+}
+.tag {
+  font-size: 11.5px; font-weight: 600;
+  padding: 3px 9px; border-radius: 999px;
+  background: var(--surface-3); color: var(--text-dim);
+  border: 1px solid var(--border);
+}
+
+/* Editor de tiempo (+/- y campo) */
+.time-editor {
+  display: flex; align-items: center; gap: 8px;
+  flex: none;
+}
+.time-editor .tbtn {
+  width: 34px; height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 19px; font-weight: 700; line-height: 1;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .14s, transform .1s, opacity .14s;
+}
+.time-editor .tbtn:hover { background: var(--surface-3); }
+.time-editor .tbtn:active { transform: scale(.9); }
+.time-editor .tbtn:disabled { opacity: .35; cursor: not-allowed; }
+.time-editor .tinput {
+  width: 64px; text-align: center;
+  font-family: inherit;
+  font-size: 15px; font-weight: 750;
+  padding: 7px 4px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg-2);
+  color: var(--text);
+}
+.time-editor .tinput:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.time-editor .unit { font-size: 12px; color: var(--text-faint); margin-left: -2px; }
+
+/* Interruptor "cambiar de lado" por ejercicio */
+.side-toggle {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12.5px; font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+.side-toggle svg { width: 15px; height: 15px; flex: none; }
+.side-toggle:hover { background: var(--surface-3); }
+.side-toggle.on {
+  background: rgba(91,141,239,.16);
+  border-color: var(--accent);
+  color: var(--accent-2);
+}
+
+.hint {
+  margin-top: 18px;
+  font-size: 13px; color: var(--text-faint);
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ===================== Detalle de ejercicio ===================== */
+.exdetail {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 30px;
+  align-items: start;
+}
+.exdetail .poster {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, var(--surface-2), var(--bg-2));
+  padding: 30px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--accent-2);
+  position: sticky; top: 90px;
+}
+.exdetail .poster svg { width: 100%; height: auto; max-width: 220px; }
+.exdetail h1 { font-size: 30px; font-weight: 800; letter-spacing: -.6px; margin: 0 0 10px; color: #fff; }
+.exdetail .lead { font-size: 16px; color: var(--text-dim); line-height: 1.55; margin: 0 0 22px; }
+
+.info-grid { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 26px; }
+.info-card {
+  flex: 1; min-width: 150px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  padding: 14px 16px;
+}
+.info-card .k { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); font-weight: 700; }
+.info-card .v { font-size: 17px; font-weight: 750; margin-top: 4px; }
+
+.muscles-row { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+
+.steps { list-style: none; padding: 0; margin: 0; display: flex; flex-direction: column; gap: 12px; }
+.steps li {
+  display: flex; gap: 14px; align-items: flex-start;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  font-size: 15px; line-height: 1.5;
+}
+.steps li .num {
+  flex: none;
+  width: 26px; height: 26px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff; font-weight: 800; font-size: 13px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+/* ===================== Reproductor (fullscreen) ===================== */
+.player {
+  position: fixed;
+  inset: 0;
+  height: 100vh;            /* respaldo para navegadores antiguos */
+  height: 100dvh;           /* altura REAL visible (descuenta las barras del navegador móvil) */
+  overflow-y: auto;         /* red de seguridad: si algo no cabe, se puede desplazar */
+  overscroll-behavior: contain;
+  z-index: 100;
+  display: none;
+  flex-direction: column;
+  background:
+    radial-gradient(1100px 700px at 50% -10%, rgba(91,141,239,.16), transparent 60%),
+    var(--bg);
+}
+.player.open { display: flex; animation: fade .3s ease; }
+.player.rest { background: radial-gradient(1100px 700px at 50% -10%, rgba(45,212,167,.16), transparent 60%), var(--bg); }
+.player.finishing { background: radial-gradient(1100px 700px at 50% -10%, rgba(244,183,64,.20), transparent 60%), var(--bg); }
+
+.player-top {
+  display: flex; align-items: center; gap: 16px;
+  padding: 22px 32px;
+}
+.player-top .pclose {
+  width: 42px; height: 42px; border-radius: 12px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background .15s;
+}
+.player-top .pclose:hover { background: var(--surface-2); }
+.player-top .ptitle { font-size: 15px; font-weight: 700; color: var(--text-dim); }
+.player-top .pcount { margin-left: auto; font-size: 14px; color: var(--text-faint); font-weight: 650; }
+
+/* Barra de progreso de la sesión */
+.pbar { padding: 0 32px; }
+.pbar-track {
+  height: 6px; border-radius: 999px;
+  background: var(--surface-2);
+  overflow: hidden;
+  display: flex; gap: 3px;
+}
+.pbar-seg { flex: 1; background: var(--surface-3); border-radius: 999px; transition: background .3s; }
+.pbar-seg.done { background: var(--accent); }
+.pbar-seg.current { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+
+.player-body {
+  flex: 1;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  gap: 18px; padding: 20px 32px;
+  text-align: center;
+}
+.player-phase {
+  font-size: 13px; font-weight: 800; letter-spacing: .18em; text-transform: uppercase;
+  color: var(--accent-2);
+}
+.player.rest .player-phase { color: var(--ok); }
+.player-exname { font-size: 38px; font-weight: 800; letter-spacing: -.8px; max-width: 720px; line-height: 1.1; color: #fff; }
+.player-fig { color: var(--accent-2); height: 150px; display: flex; align-items: center; justify-content: center; }
+.player.rest .player-fig { color: var(--ok); }
+.player-fig svg { height: 150px; width: auto; }
+
+/* Anillo del temporizador */
+.timer-wrap { position: relative; width: 280px; height: 280px; margin: 4px 0; }
+.timer-wrap svg { transform: rotate(-90deg); width: 100%; height: 100%; }
+.timer-wrap .ring-bg { fill: none; stroke: var(--surface-2); stroke-width: 14; }
+.timer-wrap .ring-fg {
+  fill: none; stroke: url(#ringGrad); stroke-width: 14; stroke-linecap: round;
+  transition: stroke-dashoffset .25s linear;
+}
+.timer-num {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.timer-num .big {
+  font-size: 76px; font-weight: 800; letter-spacing: -2px;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+.timer-num .lbl { font-size: 13px; color: var(--text-faint); font-weight: 650; margin-top: 6px; letter-spacing: .1em; text-transform: uppercase; }
+.timer-wrap.soft-warn .timer-num .big { color: #f4b740; }
+.timer-wrap.warn .timer-num .big { color: var(--danger); animation: pulse .6s ease infinite; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+
+.player-next {
+  font-size: 14.5px; color: var(--text-dim);
+}
+.player-next b { color: var(--text); font-weight: 700; }
+
+/* Controles del reproductor */
+.player-controls {
+  display: flex; align-items: center; justify-content: center; gap: 18px;
+  padding: 18px 32px 40px;
+}
+.pctrl {
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  transition: background .15s, transform .12s, border-color .15s;
+}
+.pctrl:hover { background: var(--surface-2); border-color: #3a4358; }
+.pctrl:active { transform: scale(.92); }
+.pctrl.side { width: 60px; height: 60px; }
+.pctrl.side svg { width: 24px; height: 24px; }
+.pctrl.play {
+  width: 88px; height: 88px;
+  border: none;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  box-shadow: 0 16px 36px -14px rgba(91,141,239,.95);
+}
+.pctrl.play svg { width: 36px; height: 36px; }
+.pctrl.label { position: relative; }
+.pctrl .mini-label {
+  position: absolute; bottom: -22px; left: 50%; transform: translateX(-50%);
+  font-size: 11px; color: var(--text-faint); white-space: nowrap; font-weight: 600;
+}
+
+/* Pantalla final del entrenamiento */
+.done-screen { text-align: center; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+.done-screen .check {
+  width: 110px; height: 110px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--ok), #22c55e);
+  display: flex; align-items: center; justify-content: center;
+  color: #06281f; font-size: 56px;
+  box-shadow: 0 18px 40px -14px rgba(45,212,167,.9);
+  animation: pop .5s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes pop { from { transform: scale(.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+.done-screen h2 { font-size: 32px; font-weight: 800; margin: 6px 0 0; }
+.done-screen p { color: var(--text-dim); font-size: 16px; margin: 0 0 14px; }
+.done-stats { display: flex; gap: 30px; margin: 6px 0 20px; }
+.done-stats .s .n { font-size: 28px; font-weight: 800; }
+.done-stats .s .t { font-size: 12px; color: var(--text-faint); text-transform: uppercase; letter-spacing: .08em; }
+
+/* ===================== Responsive (el desktop puede empequeñecerse) ===================== */
+@media (max-width: 920px) {
+  .routine-grid { grid-template-columns: repeat(2, 1fr); }
+  .exdetail { grid-template-columns: 1fr; }
+  .exdetail .poster { position: static; max-width: 280px; }
+}
+@media (max-width: 600px) {
+  .routine-grid { grid-template-columns: 1fr; }
+  .topbar-inner, .app { padding-left: 16px; padding-right: 16px; }
+  .player-exname { font-size: 28px; }
+  .timer-wrap { width: 230px; height: 230px; }
+  .timer-num .big { font-size: 60px; }
+}
+
+/* ===================== Reproductor: adaptación a la ALTURA visible (móvil) =====================
+   JS (FitPlayer) mide la altura realmente visible y la pone en --ph (y en el alto del reproductor),
+   y la actualiza al volver a la app, al girar o al aparecer/desaparecer las barras del navegador.
+   Las clases .compact (<=860px) y .tiny (<=640px) escalan el contenido para que los botones
+   de pausa / anterior / siguiente queden siempre a la vista. */
+.player { --ph: 100dvh; }
+.player.compact .player-top { padding: 12px 20px; }
+.player.compact .pbar { padding: 0 20px; }
+.player.compact .player-body { gap: 10px; padding: 10px 20px 8px; justify-content: flex-start; }
+.player.compact .player-exname { font-size: clamp(22px, calc(var(--ph) * 0.036), 30px); }
+.player.compact .player-fig { height: min(100px, calc(var(--ph) * 0.12)); }
+.player.compact .player-fig svg { height: min(100px, calc(var(--ph) * 0.12)); }
+.player.compact .timer-wrap { width: min(240px, calc(var(--ph) * 0.27)); height: min(240px, calc(var(--ph) * 0.27)); margin: 0; }
+.player.compact .timer-num .big { font-size: clamp(38px, calc(var(--ph) * 0.07), 62px); }
+.player.compact .player-controls { gap: 16px; padding: 12px 20px calc(24px + env(safe-area-inset-bottom)); }
+.player.compact .pctrl.side { width: 54px; height: 54px; }
+.player.compact .pctrl.play { width: 74px; height: 74px; }
+.player.tiny .player-top { padding: 8px 16px; }
+.player.tiny .player-body { gap: 6px; }
+.player.tiny .player-fig { display: none; }
+.player.tiny .timer-wrap { width: min(200px, calc(var(--ph) * 0.3)); height: min(200px, calc(var(--ph) * 0.3)); }
+.player.tiny .pctrl.side { width: 48px; height: 48px; }
+.player.tiny .pctrl.play { width: 66px; height: 66px; }
+
+  </style>
 </head>
 <body>
   <!-- Barra superior -->
@@ -64,8 +767,2432 @@
 
   <!-- Capa del reproductor de entrenamiento (fullscreen) -->
   <div id="player" class="player" aria-hidden="true"></div>
+  <script>
+/* ===========================================================================
+   data.js — Base de datos de la app (rutinas + ejercicios)
+   ---------------------------------------------------------------------------
+   - EXERCISES: diccionario de ejercicios ÚNICOS (por nombre). Cada uno define
+     su postura (pose -> icono SVG), descripción, músculos, instrucciones y
+     repeticiones orientativas.
+   - ROUTINES: las 7 rutinas extraídas de los pantallazos, en orden, cada una
+     con su lista ordenada de ejercicios.
+   Todo en español. Sin dependencias.
+   =========================================================================== */
 
-  <script src="js/data.js"></script>
-  <script src="js/app.js"></script>
+/* DEFAULT_TIME y MIN_TIME son globales usados por app.js */
+const MIN_TIME = 30;       // segundos: mínimo permitido por ejercicio (requisito)
+const DEFAULT_TIME = 30;   // segundos por ejercicio por defecto
+const TIME_STEP = 5;       // segundos que suben/bajan los botones +/-
+
+/* Transición (descanso) entre ejercicio y ejercicio. Ajustable por el usuario. */
+const DEFAULT_TRANSITION = 10; // segundos de transición por defecto
+const MIN_TRANSITION = 0;      // 0 = sin transición
+const MAX_TRANSITION = 60;     // tope razonable
+const TRANSITION_STEP = 1;     // segundos que suben/bajan los botones +/-
+
+/* "Cambiar de lado": algunos ejercicios se marcan para partir su tiempo en dos
+   mitades (lado 1 / lado 2) con una pausa en medio para reposicionarse. Esta
+   pausa es un ajuste independiente del descanso entre ejercicios. */
+const DEFAULT_SIDE_SWITCH = 10; // segundos de pausa para cambiar de lado, por defecto
+const MIN_SIDE_SWITCH = 0;      // 0 = cambio instantáneo, sin pausa
+const MAX_SIDE_SWITCH = 60;     // tope razonable
+const SIDE_SWITCH_STEP = 1;     // segundos que suben/bajan los botones +/-
+
+/* Diccionario de ejercicios únicos.
+   pose: clave del icono SVG (ver iconForPose en app.js)
+   muscles: array de grupos musculares
+   reps: texto orientativo de repeticiones/ritmo */
+const EXERCISES = {
+  "Plancha lateral con flexión de rodilla": {
+    pose: "sideplank",
+    desc: "Plancha lateral apoyando antebrazo y llevando la rodilla de arriba hacia el pecho.",
+    muscles: ["Oblicuos", "Core", "Hombros", "Glúteo medio"],
+    reps: "Mantén el equilibrio, ~10-12 flexiones de rodilla por lado",
+    steps: [
+      "Túmbate de lado y apóyate sobre el antebrazo, con el codo bajo el hombro.",
+      "Eleva la cadera hasta formar una línea recta de los pies a la cabeza.",
+      "Lleva la rodilla superior hacia el pecho y vuelve, controlando el movimiento."
+    ]
+  },
+  "Abdominales inferiores con flexión/extensión de piernas": {
+    pose: "legraise",
+    desc: "Tumbado boca arriba, flexiona y extiende las piernas trabajando el abdomen bajo.",
+    muscles: ["Abdominales inferiores", "Core", "Flexores de cadera"],
+    reps: "12-15 repeticiones controladas",
+    steps: [
+      "Túmbate boca arriba con las manos bajo los glúteos para proteger la zona lumbar.",
+      "Flexiona las rodillas hacia el pecho y después extiende las piernas sin tocar el suelo.",
+      "Mantén la zona lumbar pegada al suelo durante todo el recorrido."
+    ]
+  },
+  "Abdominales con levantamiento de piernas": {
+    pose: "legraise",
+    desc: "Elevación de piernas rectas para activar el abdomen inferior.",
+    muscles: ["Abdominales inferiores", "Core"],
+    reps: "12-15 elevaciones",
+    steps: [
+      "Boca arriba, piernas estiradas y manos a los lados o bajo los glúteos.",
+      "Sube las piernas rectas hasta la vertical.",
+      "Baja despacio sin que los talones lleguen a tocar el suelo."
+    ]
+  },
+  "Hilos tensores": {
+    pose: "standing",
+    desc: "Movilidad de pie llevando los brazos arriba como si tirases de hilos, para activar.",
+    muscles: ["Hombros", "Espalda alta", "Core"],
+    reps: "30 s de movimiento fluido",
+    steps: [
+      "De pie, espalda recta y pies al ancho de caderas.",
+      "Eleva los brazos por encima de la cabeza estirándote hacia el techo.",
+      "Baja con control y repite a ritmo constante."
+    ]
+  },
+  "Hombros": {
+    pose: "standing",
+    desc: "Círculos y elevaciones de brazos para calentar y trabajar la cintura escapular.",
+    muscles: ["Deltoides", "Trapecio"],
+    reps: "30 s alternando direcciones",
+    steps: [
+      "De pie, brazos extendidos a los lados.",
+      "Haz círculos amplios hacia delante y luego hacia atrás.",
+      "Mantén los hombros lejos de las orejas."
+    ]
+  },
+  "Sentadillas tríceps": {
+    pose: "dip",
+    desc: "Fondos de tríceps apoyando las manos en una silla o borde mientras flexionas las piernas.",
+    muscles: ["Tríceps", "Hombros", "Pecho"],
+    reps: "10-15 fondos",
+    steps: [
+      "Siéntate al borde de una silla y apoya las manos a los lados, dedos al frente.",
+      "Desliza el cuerpo hacia delante y baja flexionando los codos.",
+      "Empuja con los tríceps para volver arriba sin bloquear los codos."
+    ]
+  },
+  "Abdominales": {
+    pose: "abs",
+    desc: "Encogimiento abdominal clásico elevando el tronco hacia las rodillas.",
+    muscles: ["Recto abdominal", "Core"],
+    reps: "15-20 repeticiones",
+    steps: [
+      "Boca arriba, rodillas flexionadas y pies apoyados.",
+      "Lleva las manos a la nuca sin tirar del cuello.",
+      "Eleva los hombros despegando las escápulas y baja con control."
+    ]
+  },
+  "Abdominales tocando el talón alternativamente": {
+    pose: "twist",
+    desc: "Crunch lateral corto tocando con la mano el talón del mismo lado, alternando.",
+    muscles: ["Oblicuos", "Recto abdominal"],
+    reps: "20 toques (10 por lado)",
+    steps: [
+      "Boca arriba, rodillas flexionadas y brazos a los lados.",
+      "Inclina ligeramente el tronco hacia un lado y toca el talón con la mano.",
+      "Vuelve al centro y alterna hacia el otro lado."
+    ]
+  },
+  "Flexiones": {
+    pose: "pushup",
+    desc: "Flexión de brazos estándar manteniendo el cuerpo en línea recta.",
+    muscles: ["Pecho", "Tríceps", "Hombros", "Core"],
+    reps: "8-15 flexiones",
+    steps: [
+      "Apoya manos al ancho de los hombros y forma una línea recta de cabeza a talones.",
+      "Baja flexionando los codos hasta casi tocar el suelo con el pecho.",
+      "Empuja para subir manteniendo el abdomen apretado."
+    ]
+  },
+  "El triángulo": {
+    pose: "pike",
+    desc: "Postura en uve invertida (pike) que descarga peso sobre los hombros.",
+    muscles: ["Hombros", "Tríceps", "Espalda alta"],
+    reps: "30 s de mantenimiento o flexiones pike",
+    steps: [
+      "Desde plancha, eleva la cadera formando una uve invertida con el cuerpo.",
+      "Empuja el pecho hacia los muslos y mantén los talones hacia el suelo.",
+      "Para más intensidad, flexiona los codos acercando la cabeza al suelo."
+    ]
+  },
+  "Sentadillas": {
+    pose: "squat",
+    desc: "Sentadilla con peso corporal bajando como si te sentaras en una silla.",
+    muscles: ["Cuádriceps", "Glúteos", "Isquiotibiales"],
+    reps: "15-20 sentadillas",
+    steps: [
+      "Pies al ancho de hombros, puntas ligeramente hacia fuera.",
+      "Baja llevando la cadera atrás y abajo, espalda recta y rodillas alineadas.",
+      "Sube empujando con los talones hasta extender las caderas."
+    ]
+  },
+  "Levantamiento de cadera": {
+    pose: "bridge",
+    desc: "Puente de glúteos elevando la cadera con la espalda apoyada.",
+    muscles: ["Glúteos", "Isquiotibiales", "Lumbares"],
+    reps: "15-20 elevaciones",
+    steps: [
+      "Boca arriba, rodillas flexionadas y pies apoyados cerca de los glúteos.",
+      "Eleva la cadera apretando los glúteos hasta alinear cadera y rodillas.",
+      "Baja despacio sin apoyar del todo entre repeticiones."
+    ]
+  },
+  "Abdominales con torsión lateral de tronco": {
+    pose: "twist",
+    desc: "Giros del tronco tipo 'russian twist' para trabajar los oblicuos.",
+    muscles: ["Oblicuos", "Core"],
+    reps: "20 giros (10 por lado)",
+    steps: [
+      "Sentado, tronco inclinado atrás y pies apoyados o elevados.",
+      "Junta las manos y gira el tronco llevándolas a un lado.",
+      "Gira al lado contrario controlando el movimiento."
+    ]
+  },
+  "Flexiones con rotación": {
+    pose: "rotation",
+    desc: "Flexión seguida de rotación del tronco abriendo un brazo hacia el techo.",
+    muscles: ["Pecho", "Oblicuos", "Hombros", "Core"],
+    reps: "8-12 (alternando lados)",
+    steps: [
+      "Haz una flexión completa manteniendo el cuerpo recto.",
+      "Al subir, gira el tronco y abre un brazo hacia el techo (postura en T).",
+      "Vuelve y repite alternando el lado en cada flexión."
+    ]
+  },
+  "Sierra corporal": {
+    pose: "plank",
+    desc: "Plancha en la que el cuerpo se desplaza adelante y atrás como una sierra.",
+    muscles: ["Core", "Hombros", "Abdominales"],
+    reps: "30 s de balanceo controlado",
+    steps: [
+      "Colócate en plancha sobre los antebrazos.",
+      "Desplaza el cuerpo hacia delante y atrás moviéndote desde los hombros.",
+      "Mantén el abdomen apretado y la cadera estable."
+    ]
+  },
+  "A cuatro patas": {
+    pose: "quadruped",
+    desc: "Desde cuadrupedia, extiende brazo y pierna contrarios (bird-dog).",
+    muscles: ["Lumbares", "Glúteos", "Core", "Espalda"],
+    reps: "12 repeticiones alternas",
+    steps: [
+      "Apóyate sobre manos y rodillas, espalda neutra.",
+      "Extiende a la vez el brazo derecho y la pierna izquierda.",
+      "Vuelve y alterna con el lado contrario sin arquear la espalda."
+    ]
+  },
+  "La tabla": {
+    pose: "plank",
+    desc: "Plancha frontal isométrica manteniendo el cuerpo recto y firme.",
+    muscles: ["Core", "Abdominales", "Hombros", "Glúteos"],
+    reps: "Mantén 30 s",
+    steps: [
+      "Apóyate sobre los antebrazos con los codos bajo los hombros.",
+      "Forma una línea recta de la cabeza a los talones.",
+      "Aprieta abdomen y glúteos; no dejes caer la cadera."
+    ]
+  },
+  "Superman": {
+    pose: "superman",
+    desc: "Boca abajo, eleva brazos y piernas a la vez como si volaras.",
+    muscles: ["Lumbares", "Glúteos", "Espalda"],
+    reps: "12-15 elevaciones",
+    steps: [
+      "Túmbate boca abajo con brazos extendidos al frente.",
+      "Eleva a la vez brazos, pecho y piernas del suelo.",
+      "Mantén un instante arriba y baja con control."
+    ]
+  },
+  "Ejercicio del nadador": {
+    pose: "superman",
+    desc: "Boca abajo, alterna brazo y pierna contrarios imitando la natación.",
+    muscles: ["Lumbares", "Glúteos", "Espalda alta"],
+    reps: "30 s de aleteo alterno",
+    steps: [
+      "Boca abajo con brazos extendidos al frente.",
+      "Eleva brazo derecho y pierna izquierda, luego alterna.",
+      "Mantén el cuello relajado mirando al suelo."
+    ]
+  },
+  "Remo renegado": {
+    pose: "plank",
+    desc: "Desde plancha alta, rema un brazo hacia la cadera alternando lados.",
+    muscles: ["Espalda", "Core", "Bíceps", "Hombros"],
+    reps: "12 remos (6 por lado)",
+    steps: [
+      "Colócate en plancha alta con las manos bajo los hombros.",
+      "Tira de un brazo hacia atrás llevando el codo a la cadera.",
+      "Bájalo y alterna evitando que la cadera rote."
+    ]
+  },
+  "Desplazamiento de brazos": {
+    pose: "plank",
+    desc: "En plancha, desplaza las manos hacia delante y atrás de forma controlada.",
+    muscles: ["Hombros", "Core", "Espalda"],
+    reps: "30 s de desplazamientos",
+    steps: [
+      "Colócate en plancha alta estable.",
+      "Camina con las manos hacia delante ampliando el apoyo.",
+      "Vuelve a la posición inicial sin hundir la cadera."
+    ]
+  },
+  "Rotaciones de espalda": {
+    pose: "quadruped",
+    desc: "Desde cuadrupedia, pasa el brazo por debajo del cuerpo y ábrelo hacia el techo.",
+    muscles: ["Espalda dorsal", "Oblicuos", "Hombros"],
+    reps: "10 rotaciones por lado",
+    steps: [
+      "Apóyate sobre manos y rodillas.",
+      "Pasa un brazo por debajo del tronco girando la columna.",
+      "Abre el brazo hacia el techo siguiéndolo con la mirada."
+    ]
+  },
+  "Tabla con levantamiento de brazo y pierna": {
+    pose: "plank",
+    desc: "Plancha en la que elevas a la vez un brazo y la pierna contraria.",
+    muscles: ["Core", "Glúteos", "Hombros", "Espalda"],
+    reps: "10 repeticiones alternas",
+    steps: [
+      "Colócate en plancha alta firme.",
+      "Eleva el brazo derecho y la pierna izquierda manteniendo la cadera estable.",
+      "Vuelve y alterna sin balancear el cuerpo."
+    ]
+  },
+  "Molinillo": {
+    pose: "windmill",
+    desc: "De pie, inclina el tronco y toca el pie contrario con la mano (molinillo).",
+    muscles: ["Oblicuos", "Isquiotibiales", "Espalda baja"],
+    reps: "20 toques (10 por lado)",
+    steps: [
+      "De pie, piernas algo más abiertas que los hombros y brazos en cruz.",
+      "Inclínate y toca el pie izquierdo con la mano derecha.",
+      "Sube y alterna hacia el otro lado."
+    ]
+  },
+  "Ejercicio de oblicuos con torsión del tronco y pies en el aire": {
+    pose: "twist",
+    desc: "Con los pies elevados, gira el tronco de lado a lado para trabajar oblicuos.",
+    muscles: ["Oblicuos", "Abdominales inferiores", "Core"],
+    reps: "20 giros (10 por lado)",
+    steps: [
+      "Boca arriba, eleva las piernas con rodillas a 90°.",
+      "Lleva las rodillas hacia un lado controlando con el abdomen.",
+      "Vuelve al centro y gira hacia el otro lado."
+    ]
+  },
+  "Brazos en cruz": {
+    pose: "standing",
+    desc: "Apertura y cierre de brazos en cruz para hombros y espalda alta.",
+    muscles: ["Deltoides", "Espalda alta", "Pecho"],
+    reps: "30 s de aperturas",
+    steps: [
+      "De pie, brazos extendidos en cruz a la altura de los hombros.",
+      "Junta las manos al frente y vuelve a abrir en cruz.",
+      "Mantén los brazos a la altura del pecho todo el rato."
+    ]
+  },
+
+  /* --- Estiramientos --- */
+  "Estiramiento de pecho": {
+    pose: "stretch",
+    desc: "Lleva los brazos atrás abriendo el pecho para estirar los pectorales.",
+    muscles: ["Pecho", "Hombros"],
+    reps: "Mantén 30 s",
+    steps: [
+      "De pie, entrelaza las manos detrás de la espalda.",
+      "Estira los brazos y eleva ligeramente las manos abriendo el pecho.",
+      "Respira hondo y mantén la postura sin forzar."
+    ]
+  },
+  "Estiramiento de hombros": {
+    pose: "stretch",
+    desc: "Cruza un brazo por delante del pecho para estirar el deltoides.",
+    muscles: ["Deltoides", "Espalda alta"],
+    reps: "30 s por brazo",
+    steps: [
+      "Lleva un brazo recto cruzado por delante del pecho.",
+      "Con la otra mano, presiona el codo hacia ti.",
+      "Mantén y cambia de lado."
+    ]
+  },
+  "Estiramiento de tríceps": {
+    pose: "stretch",
+    desc: "Flexiona el codo por detrás de la cabeza para estirar el tríceps.",
+    muscles: ["Tríceps", "Hombros"],
+    reps: "30 s por brazo",
+    steps: [
+      "Eleva un brazo y flexiona el codo llevando la mano a la espalda.",
+      "Con la otra mano empuja suavemente el codo hacia abajo.",
+      "Mantén y cambia de brazo."
+    ]
+  },
+  "Estiramiento de bíceps": {
+    pose: "stretch",
+    desc: "Extiende el brazo atrás con la palma para estirar el bíceps.",
+    muscles: ["Bíceps", "Antebrazo", "Pecho"],
+    reps: "30 s por brazo",
+    steps: [
+      "Extiende un brazo hacia atrás a la altura del hombro, palma al frente.",
+      "Apoya la mano en una pared y gira suavemente el cuerpo.",
+      "Mantén la tensión leve y cambia de lado."
+    ]
+  },
+  "Estiramiento lateral": {
+    pose: "stretch",
+    desc: "Inclina el tronco hacia un lado con el brazo arriba para estirar el costado.",
+    muscles: ["Oblicuos", "Dorsal", "Costado"],
+    reps: "30 s por lado",
+    steps: [
+      "De pie, eleva un brazo por encima de la cabeza.",
+      "Inclínate hacia el lado contrario estirando todo el costado.",
+      "Vuelve y repite hacia el otro lado."
+    ]
+  },
+  "Estiramiento de cuádriceps": {
+    pose: "stretch",
+    desc: "De pie, lleva el talón al glúteo sujetando el tobillo.",
+    muscles: ["Cuádriceps", "Flexores de cadera"],
+    reps: "30 s por pierna",
+    steps: [
+      "De pie, sujétate a un apoyo si lo necesitas.",
+      "Flexiona una rodilla y agarra el tobillo llevando el talón al glúteo.",
+      "Mantén las rodillas juntas y cambia de pierna."
+    ]
+  },
+  "Estiramiento de la pantorrilla": {
+    pose: "stretch",
+    desc: "En zancada, estira la pierna de atrás presionando el talón al suelo.",
+    muscles: ["Gemelos", "Sóleo"],
+    reps: "30 s por pierna",
+    steps: [
+      "Da un paso largo hacia delante y apoya las manos en una pared.",
+      "Mantén la pierna de atrás recta con el talón pegado al suelo.",
+      "Empuja la cadera adelante y cambia de pierna."
+    ]
+  },
+  "Estiramiento de abductores": {
+    pose: "stretch",
+    desc: "Zancada lateral para estirar la cara interna del muslo.",
+    muscles: ["Aductores", "Cara interna del muslo"],
+    reps: "30 s por lado",
+    steps: [
+      "Abre bien las piernas y flexiona una rodilla llevando el peso a ese lado.",
+      "Mantén la otra pierna estirada con el pie apoyado.",
+      "Mantén y cambia de lado."
+    ]
+  },
+  "Estiramiento de tendones": {
+    pose: "stretch",
+    desc: "Sentado, lleva el tronco hacia las piernas estiradas (isquiotibiales).",
+    muscles: ["Isquiotibiales", "Espalda baja"],
+    reps: "Mantén 30 s",
+    steps: [
+      "Siéntate con las piernas estiradas al frente.",
+      "Inclina el tronco hacia delante desde la cadera.",
+      "Lleva las manos hacia los pies sin redondear demasiado la espalda."
+    ]
+  },
+  "Estiramiento de glúteos": {
+    pose: "stretch",
+    desc: "Tumbado, cruza el tobillo sobre la rodilla y atrae la pierna al pecho.",
+    muscles: ["Glúteos", "Piramidal"],
+    reps: "30 s por lado",
+    steps: [
+      "Boca arriba, cruza el tobillo sobre la rodilla contraria.",
+      "Agarra el muslo y atráelo hacia el pecho.",
+      "Mantén y cambia de lado."
+    ]
+  },
+  "Estiramiento abdominal": {
+    pose: "stretch",
+    desc: "Postura de la cobra: apóyate y extiende la columna para estirar el abdomen.",
+    muscles: ["Abdominales", "Flexores de cadera", "Lumbares"],
+    reps: "Mantén 30 s",
+    steps: [
+      "Túmbate boca abajo con las manos bajo los hombros.",
+      "Empuja el suelo extendiendo los brazos y elevando el pecho.",
+      "Mantén la cadera apoyada y los hombros lejos de las orejas."
+    ]
+  },
+
+  /* --- Núcleo extra --- */
+  "Elevación rodilla/codo": {
+    pose: "standing",
+    desc: "De pie, lleva la rodilla hacia el codo contrario alternando lados.",
+    muscles: ["Oblicuos", "Core", "Flexores de cadera"],
+    reps: "30 s a buen ritmo",
+    steps: [
+      "De pie, manos en la nuca.",
+      "Eleva una rodilla y acércala al codo contrario girando el tronco.",
+      "Alterna lados a ritmo constante."
+    ]
+  },
+  "Abdominales inferiores": {
+    pose: "legraise",
+    desc: "Trabajo específico del abdomen bajo con elevación controlada de piernas.",
+    muscles: ["Abdominales inferiores", "Core"],
+    reps: "15 repeticiones",
+    steps: [
+      "Boca arriba con las manos bajo los glúteos.",
+      "Eleva las piernas semiflexionadas llevando las rodillas hacia el pecho.",
+      "Baja despacio sin tocar el suelo."
+    ]
+  },
+  "Tabla inversa": {
+    pose: "bridge",
+    desc: "Apoyo en manos y talones con el cuerpo recto mirando al techo.",
+    muscles: ["Glúteos", "Lumbares", "Hombros", "Core"],
+    reps: "Mantén 30 s",
+    steps: [
+      "Siéntate con las piernas estiradas y las manos apoyadas detrás de la cadera.",
+      "Eleva la cadera hasta formar una línea recta con el cuerpo.",
+      "Aprieta glúteos y mantén el pecho abierto."
+    ]
+  },
+  "Laterales": {
+    pose: "sideplank",
+    desc: "Elevaciones de cadera en plancha lateral para los oblicuos.",
+    muscles: ["Oblicuos", "Glúteo medio", "Core"],
+    reps: "12 elevaciones por lado",
+    steps: [
+      "Plancha lateral sobre el antebrazo, cuerpo recto.",
+      "Baja la cadera casi hasta el suelo y vuelve a subir.",
+      "Mantén el control y cambia de lado."
+    ]
+  },
+  "Tabla de lado": {
+    pose: "sideplank",
+    desc: "Plancha lateral isométrica apoyando un antebrazo.",
+    muscles: ["Oblicuos", "Core", "Hombros"],
+    reps: "Mantén 30 s por lado",
+    steps: [
+      "Túmbate de lado apoyando el antebrazo bajo el hombro.",
+      "Eleva la cadera formando una línea recta.",
+      "Mantén firme y cambia de lado."
+    ]
+  },
+  "Levantamiento de piernas": {
+    pose: "legraise",
+    desc: "Elevación de piernas rectas desde el suelo para el abdomen bajo.",
+    muscles: ["Abdominales inferiores", "Flexores de cadera"],
+    reps: "12-15 elevaciones",
+    steps: [
+      "Boca arriba, piernas estiradas y manos a los lados.",
+      "Eleva las piernas rectas hasta la vertical.",
+      "Baja con control sin tocar el suelo."
+    ]
+  },
+  "Tijeras": {
+    pose: "legraise",
+    desc: "Cruces alternos de piernas estiradas y elevadas (tijeras).",
+    muscles: ["Abdominales inferiores", "Aductores", "Core"],
+    reps: "30 s de tijeras",
+    steps: [
+      "Boca arriba con las piernas estiradas y ligeramente elevadas.",
+      "Cruza una pierna sobre la otra alternando arriba y abajo.",
+      "Mantén la zona lumbar pegada al suelo."
+    ]
+  },
+  "A tres dedos": {
+    pose: "plank",
+    desc: "Plancha con apoyo reducido para aumentar la exigencia del core.",
+    muscles: ["Core", "Hombros", "Glúteos"],
+    reps: "Mantén 30 s",
+    steps: [
+      "Colócate en plancha sobre los antebrazos.",
+      "Reduce los puntos de apoyo manteniendo el cuerpo recto.",
+      "Aprieta el abdomen y no dejes caer la cadera."
+    ]
+  },
+
+  /* --- Rebajavientres extra --- */
+  "Crunch con piernas elevadas": {
+    pose: "abs",
+    desc: "Encogimiento abdominal con las piernas elevadas en ángulo recto.",
+    muscles: ["Recto abdominal", "Abdominales inferiores"],
+    reps: "15-20 repeticiones",
+    steps: [
+      "Boca arriba, eleva las piernas con rodillas a 90°.",
+      "Lleva los hombros hacia las rodillas despegando las escápulas.",
+      "Baja con control manteniendo las piernas quietas."
+    ]
+  },
+  "Flexiones invertidas": {
+    pose: "pike",
+    desc: "Flexiones tipo pike con la cadera elevada para enfocar los hombros.",
+    muscles: ["Hombros", "Tríceps", "Espalda alta"],
+    reps: "8-12 flexiones",
+    steps: [
+      "Colócate en uve invertida con la cadera bien elevada.",
+      "Flexiona los codos acercando la cabeza al suelo.",
+      "Empuja para volver arriba manteniendo la cadera alta."
+    ]
+  },
+  "Flexiones laterales": {
+    pose: "sideplank",
+    desc: "Desde plancha lateral, flexiona y extiende el brazo de apoyo.",
+    muscles: ["Hombros", "Oblicuos", "Tríceps", "Core"],
+    reps: "8-12 por lado",
+    steps: [
+      "Colócate en plancha lateral apoyando la mano (brazo extendido).",
+      "Flexiona el codo bajando la cadera hacia el suelo.",
+      "Empuja para subir y cambia de lado."
+    ]
+  },
+
+  /* --- Tren superior extra --- */
+  "Toques de hombro": {
+    pose: "plank",
+    desc: "En plancha alta, toca el hombro contrario con la mano alternando.",
+    muscles: ["Core", "Hombros", "Pecho"],
+    reps: "20 toques (10 por lado)",
+    steps: [
+      "Colócate en plancha alta con los pies algo separados.",
+      "Toca el hombro contrario con una mano sin mover la cadera.",
+      "Vuelve y alterna de forma controlada."
+    ]
+  },
+  "Ejercicio de tríceps": {
+    pose: "dip",
+    desc: "Fondos de tríceps con apoyo en una superficie elevada.",
+    muscles: ["Tríceps", "Hombros"],
+    reps: "10-15 fondos",
+    steps: [
+      "Apoya las manos en el borde de una silla, dedos al frente.",
+      "Baja flexionando los codos hacia atrás.",
+      "Empuja con los tríceps para volver arriba."
+    ]
+  },
+  "Rotación de brazos": {
+    pose: "standing",
+    desc: "Círculos amplios de brazos para movilizar y trabajar los hombros.",
+    muscles: ["Deltoides", "Trapecio", "Espalda alta"],
+    reps: "30 s alternando sentido",
+    steps: [
+      "De pie, brazos extendidos en cruz.",
+      "Haz círculos pequeños y ve ampliándolos.",
+      "Cambia el sentido a mitad del tiempo."
+    ]
+  },
+
+  /* --- Ejercicios nuevos: Cardio / Todo el cuerpo / Propina --- */
+  "Saltar y abrir piernas": {
+    pose: "standing",
+    desc: "Jumping jacks: salta abriendo las piernas y subiendo los brazos, y vuelve.",
+    muscles: ["Cuerpo completo", "Hombros", "Piernas", "Cardio"],
+    reps: "30 s a buen ritmo",
+    steps: [
+      "De pie, pies juntos y brazos a los lados.",
+      "Salta abriendo las piernas y subiendo los brazos por encima de la cabeza.",
+      "Vuelve al centro de un salto y repite a ritmo constante."
+    ]
+  },
+  "Zancada hacia atrás para subir rodilla": {
+    pose: "squat",
+    desc: "Da un paso atrás en zancada y, al subir, lleva la rodilla hacia el pecho.",
+    muscles: ["Cuádriceps", "Glúteos", "Core", "Equilibrio"],
+    reps: "10-12 por pierna",
+    steps: [
+      "Da un paso atrás y baja en zancada hasta casi tocar el suelo con la rodilla.",
+      "Empuja con la pierna delantera para subir.",
+      "Al subir, lleva la rodilla de atrás hacia el pecho y alterna."
+    ]
+  },
+  "Talones al glúteo": {
+    pose: "standing",
+    desc: "Corre en el sitio llevando los talones hacia los glúteos.",
+    muscles: ["Isquiotibiales", "Glúteos", "Gemelos", "Cardio"],
+    reps: "30 s a ritmo ágil",
+    steps: [
+      "De pie, ligeramente inclinado hacia delante.",
+      "Lleva un talón hacia el glúteo y baja, alternando rápido.",
+      "Mantén el abdomen activo y los brazos acompañando."
+    ]
+  },
+  "Saltos cruzando brazos y piernas": {
+    pose: "standing",
+    desc: "Como los jumping jacks, pero cruzando brazos y piernas al juntarlos.",
+    muscles: ["Hombros", "Aductores", "Core", "Cardio"],
+    reps: "30 s alternando el cruce",
+    steps: [
+      "De pie con piernas y brazos abiertos.",
+      "Salta cruzando una pierna por delante de la otra y los brazos frente al pecho.",
+      "Abre de nuevo y cruza alternando en cada salto."
+    ]
+  },
+  "Escalador": {
+    pose: "plank",
+    desc: "Mountain climber: en plancha alta, lleva las rodillas al pecho alternando rápido.",
+    muscles: ["Core", "Hombros", "Flexores de cadera", "Cardio"],
+    reps: "30 s a ritmo constante",
+    steps: [
+      "Colócate en plancha alta con las manos bajo los hombros.",
+      "Lleva una rodilla hacia el pecho y vuelve.",
+      "Alterna las piernas rápido manteniendo la cadera baja y estable."
+    ]
+  },
+  "Péndulo": {
+    pose: "standing",
+    desc: "Balancea una pierna de lado a lado como un péndulo, con apoyo si lo necesitas.",
+    muscles: ["Glúteo medio", "Aductores", "Equilibrio", "Core"],
+    reps: "12-15 por pierna",
+    steps: [
+      "De pie, apóyate ligeramente si hace falta.",
+      "Balancea una pierna hacia fuera y luego crúzala por delante.",
+      "Controla el movimiento sin mover el tronco y cambia de pierna."
+    ]
+  },
+  "Saltos laterales": {
+    pose: "squat",
+    desc: "Salta de lado a lado cayendo con la rodilla flexionada (tipo patinador).",
+    muscles: ["Cuádriceps", "Glúteos", "Gemelos", "Cardio"],
+    reps: "30 s de saltos alternos",
+    steps: [
+      "Salta lateralmente cayendo sobre una pierna con la rodilla algo flexionada.",
+      "Lleva la otra pierna por detrás para frenar.",
+      "Salta al lado contrario alternando con control."
+    ]
+  },
+  "Rodillas arriba en el sitio": {
+    pose: "standing",
+    desc: "Corre en el sitio subiendo las rodillas a la altura de la cadera (high knees).",
+    muscles: ["Flexores de cadera", "Cuádriceps", "Core", "Cardio"],
+    reps: "30 s a ritmo ágil",
+    steps: [
+      "De pie, con los brazos flexionados.",
+      "Sube una rodilla a la altura de la cadera y baja, alternando rápido.",
+      "Mantén el tronco erguido y el abdomen activo."
+    ]
+  },
+  "Fortalecimiento de glúteos": {
+    pose: "squat",
+    desc: "Zancada profunda enfocada en activar y fortalecer los glúteos.",
+    muscles: ["Glúteos", "Cuádriceps", "Isquiotibiales"],
+    reps: "10-12 por pierna",
+    steps: [
+      "Da un paso al frente y baja en zancada controlada.",
+      "Aprieta el glúteo de la pierna delantera al subir.",
+      "Mantén el tronco erguido y alterna piernas."
+    ]
+  },
+  "Plancha con saltos": {
+    pose: "plank",
+    desc: "Plank jacks: en plancha, abre y cierra las piernas con saltos.",
+    muscles: ["Core", "Hombros", "Aductores", "Cardio"],
+    reps: "30 s de saltos",
+    steps: [
+      "Colócate en plancha sobre antebrazos o manos.",
+      "Salta abriendo las piernas y vuelve a juntarlas.",
+      "Mantén la cadera estable y el abdomen apretado."
+    ]
+  },
+  "Giros oblicuos": {
+    pose: "twist",
+    desc: "De pie, gira el tronco de lado a lado activando los oblicuos.",
+    muscles: ["Oblicuos", "Core"],
+    reps: "30 s de giros",
+    steps: [
+      "De pie, rodillas algo flexionadas y manos juntas frente al pecho.",
+      "Gira el tronco a un lado y al otro de forma controlada.",
+      "Mueve desde la cintura manteniendo la cadera estable."
+    ]
+  },
+  "Zancadas": {
+    pose: "squat",
+    desc: "Da un paso al frente y baja la rodilla trasera (zancada / lunge).",
+    muscles: ["Cuádriceps", "Glúteos", "Isquiotibiales"],
+    reps: "12 por pierna",
+    steps: [
+      "Da un paso largo al frente.",
+      "Baja flexionando ambas rodillas hasta casi tocar el suelo con la de atrás.",
+      "Empuja con la pierna delantera para volver y alterna."
+    ]
+  },
+  "Zancada lateral": {
+    pose: "squat",
+    desc: "Paso amplio hacia un lado flexionando esa rodilla (zancada lateral).",
+    muscles: ["Cuádriceps", "Glúteos", "Aductores"],
+    reps: "10-12 por lado",
+    steps: [
+      "Da un paso amplio hacia un lado.",
+      "Flexiona la rodilla de ese lado manteniendo la otra pierna estirada.",
+      "Empuja para volver al centro y alterna lados."
+    ]
+  }
+};
+
+/* Las 7 rutinas, en el orden de los pantallazos.
+   - id: identificador interno
+   - name / subtitle: títulos
+   - author: (solo Tábata) para reproducir la cabecera del pantallazo
+   - icon: emoji de la tarjeta
+   - accent: color de acento de la rutina (degradado en la tarjeta)
+   - exercises: lista ordenada de { name, time } (time = segundos) */
+const ROUTINES = [
+  {
+    id: "tabata",
+    name: "Tábata a modo mío",
+    subtitle: "Circuito intenso por intervalos",
+    author: { name: "Por Ale Rod", handle: "@Alerozz" },
+    icon: "🔥",
+    accent: "#ff7a59",
+    exercises: [
+      "Plancha lateral con flexión de rodilla",
+      "Abdominales inferiores con flexión/extensión de piernas",
+      "Abdominales con levantamiento de piernas",
+      "Plancha lateral con flexión de rodilla",
+      "Abdominales inferiores con flexión/extensión de piernas",
+      "Abdominales con levantamiento de piernas",
+      "Plancha lateral con flexión de rodilla",
+      "Abdominales inferiores con flexión/extensión de piernas",
+      "Abdominales con levantamiento de piernas"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "combinado",
+    name: "Todo combinado",
+    subtitle: "Cuerpo completo",
+    icon: "💪",
+    accent: "#5b8def",
+    exercises: [
+      "Hilos tensores",
+      "Hombros",
+      "Sentadillas tríceps",
+      "Abdominales",
+      "Abdominales tocando el talón alternativamente",
+      "Flexiones",
+      "El triángulo",
+      "Sentadillas",
+      "Levantamiento de cadera",
+      "Abdominales con torsión lateral de tronco",
+      "Flexiones con rotación",
+      "Sierra corporal"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "espalda",
+    name: "Espalda",
+    subtitle: "Fortalece y cuida tu espalda",
+    icon: "🧗",
+    accent: "#2dd4a7",
+    exercises: [
+      "A cuatro patas",
+      "La tabla",
+      "Superman",
+      "Ejercicio del nadador",
+      "Remo renegado",
+      "Desplazamiento de brazos",
+      "Rotaciones de espalda",
+      "Tabla con levantamiento de brazo y pierna",
+      "Molinillo",
+      "Sierra corporal",
+      "Ejercicio de oblicuos con torsión del tronco y pies en el aire",
+      "Brazos en cruz"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "estiramientos",
+    name: "Estiramientos",
+    subtitle: "Flexibilidad y recuperación",
+    icon: "🧘",
+    accent: "#a78bfa",
+    exercises: [
+      "Estiramiento de pecho",
+      "Estiramiento de hombros",
+      "Estiramiento de tríceps",
+      "Estiramiento de bíceps",
+      "Flexiones",
+      "Estiramiento lateral",
+      "Estiramiento de cuádriceps",
+      "Estiramiento de la pantorrilla",
+      "Estiramiento de abductores",
+      "Estiramiento de tendones",
+      "Estiramiento de glúteos",
+      "Estiramiento abdominal"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "nucleo",
+    name: "Núcleo",
+    subtitle: "Core de hierro",
+    icon: "🎯",
+    accent: "#f4b740",
+    exercises: [
+      "Elevación rodilla/codo",
+      "Abdominales inferiores",
+      "La tabla",
+      "Abdominales",
+      "Tabla inversa",
+      "A cuatro patas",
+      "Laterales",
+      "Tabla de lado",
+      "Levantamiento de piernas",
+      "Superman",
+      "Tijeras",
+      "A tres dedos"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "rebajavientres",
+    name: "Rebajavientres",
+    subtitle: "Abdomen y oblicuos",
+    icon: "⏱️",
+    accent: "#ec4899",
+    exercises: [
+      "Abdominales",
+      "Abdominales tocando el talón alternativamente",
+      "A tres dedos",
+      "Crunch con piernas elevadas",
+      "Flexiones invertidas",
+      "La tabla",
+      "Flexiones laterales",
+      "Abdominales inferiores",
+      "Ejercicio de oblicuos con torsión del tronco y pies en el aire",
+      "Sierra corporal",
+      "Abdominales con torsión lateral de tronco",
+      "Abdominales con levantamiento de piernas"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "trensuperior",
+    name: "Tren superior",
+    subtitle: "Brazos, pecho y hombros",
+    icon: "🏋️",
+    accent: "#38bdf8",
+    exercises: [
+      "Hilos tensores",
+      "Hombros",
+      "Sentadillas tríceps",
+      "Molinillo",
+      "Flexiones laterales",
+      "Toques de hombro",
+      "Flexiones",
+      "El triángulo",
+      "Ejercicio de tríceps",
+      "Flexiones con rotación",
+      "Brazos en cruz",
+      "Rotación de brazos"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "quemarcardio",
+    name: "Quemar calorías cardio",
+    subtitle: "Cardio quemagrasa",
+    icon: "🏃",
+    accent: "#fb7185",
+    exercises: [
+      "Saltar y abrir piernas",
+      "Zancada hacia atrás para subir rodilla",
+      "Talones al glúteo",
+      "Saltos cruzando brazos y piernas",
+      "Escalador",
+      "Péndulo",
+      "Saltos laterales",
+      "Rodillas arriba en el sitio",
+      "Fortalecimiento de glúteos",
+      "Plancha con saltos",
+      "Sentadillas",
+      "Giros oblicuos"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "todocuerpo",
+    name: "Todo el cuerpo",
+    subtitle: "Entrenamiento de cuerpo completo",
+    icon: "🤸",
+    accent: "#34d399",
+    exercises: [
+      "Saltar y abrir piernas",
+      "Elevación rodilla/codo",
+      "Flexiones",
+      "Abdominales",
+      "Levantamiento de cadera",
+      "Sentadillas",
+      "Ejercicio de tríceps",
+      "La tabla",
+      "Rodillas arriba en el sitio",
+      "Zancadas",
+      "Flexiones con rotación",
+      "Tabla de lado"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  },
+  {
+    id: "propina",
+    name: "Propina",
+    subtitle: "Extra de piernas y glúteos",
+    author: { name: "Por Ale Rod", handle: "@Alerozz" },
+    icon: "⭐",
+    accent: "#fbbf24",
+    exercises: [
+      "Elevación rodilla/codo",
+      "Sentadillas",
+      "Fortalecimiento de glúteos",
+      "Zancadas",
+      "Molinillo",
+      "Zancada lateral",
+      "Estiramiento lateral"
+    ].map(n => ({ name: n, time: DEFAULT_TIME }))
+  }
+];
+
+/* ===========================================================================
+   app.js — Router de vistas, iconos SVG, editor de tiempo y reproductor.
+   Vanilla JS. Sin dependencias. Funciona bajo file://.
+   =========================================================================== */
+
+(function () {
+  "use strict";
+
+  /* ---------------------------------------------------------------------------
+     Estado de la app
+     - view: 'home' | 'routine' | 'exercise'
+     - routine: rutina activa (referencia a un objeto de ROUTINES)
+     Los tiempos editados se guardan directamente en routine.exercises[i].time
+     (viven en memoria durante la sesión del navegador).
+  --------------------------------------------------------------------------- */
+  const state = {
+    view: "home",
+    routine: null,
+    exerciseName: null
+  };
+
+  const appEl     = document.getElementById("app");
+  const playerEl  = document.getElementById("player");
+  const backBtn   = document.getElementById("backBtn");
+  const titleEl   = document.getElementById("topbarTitle");
+
+  /* ---------------------------------------------------------------------------
+     Ajustes del usuario: segundos de transición (descanso) entre ejercicios, y
+     segundos de pausa para "cambiar de lado" dentro de un ejercicio marcado
+     como tal. Se guardan en localStorage para que se recuerden entre sesiones
+     (con try/catch por si el navegador lo bloquea, p. ej. en modo privado).
+  --------------------------------------------------------------------------- */
+  function clampTransition(v) {
+    v = Math.round(Number(v));
+    if (isNaN(v)) v = DEFAULT_TRANSITION;
+    return Math.max(MIN_TRANSITION, Math.min(MAX_TRANSITION, v));
+  }
+  function clampSideSwitch(v) {
+    v = Math.round(Number(v));
+    if (isNaN(v)) v = DEFAULT_SIDE_SWITCH;
+    return Math.max(MIN_SIDE_SWITCH, Math.min(MAX_SIDE_SWITCH, v));
+  }
+  const settings = {
+    transition: (function () {
+      try {
+        const saved = localStorage.getItem("clistenia.transition");
+        if (saved !== null) return clampTransition(saved);
+      } catch (e) { /* ignorar */ }
+      return DEFAULT_TRANSITION;
+    })(),
+    sideSwitch: (function () {
+      try {
+        const saved = localStorage.getItem("clistenia.sideswitch");
+        if (saved !== null) return clampSideSwitch(saved);
+      } catch (e) { /* ignorar */ }
+      return DEFAULT_SIDE_SWITCH;
+    })()
+  };
+  function saveTransition(v) {
+    settings.transition = clampTransition(v);
+    try { localStorage.setItem("clistenia.transition", String(settings.transition)); }
+    catch (e) { /* ignorar */ }
+    return settings.transition;
+  }
+  function saveSideSwitch(v) {
+    settings.sideSwitch = clampSideSwitch(v);
+    try { localStorage.setItem("clistenia.sideswitch", String(settings.sideSwitch)); }
+    catch (e) { /* ignorar */ }
+    return settings.sideSwitch;
+  }
+
+  /* ---------------------------------------------------------------------------
+     Guardado genérico en localStorage (JSON) con try/catch. Se usa para:
+     - El historial de entrenamientos realizados.
+     - Los tiempos personalizados de cada ejercicio (para que se recuerden).
+     Nota: dentro del visor de artifacts de claude.ai el almacenamiento puede
+     estar bloqueado; en la versión offline (archivo abierto en Chrome) funciona.
+  --------------------------------------------------------------------------- */
+  function storeGet(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      return v == null ? fallback : JSON.parse(v);
+    } catch (e) { return fallback; }
+  }
+  function storeSet(key, val) {
+    try { localStorage.setItem(key, JSON.stringify(val)); return true; }
+    catch (e) { return false; }
+  }
+
+  /* --- Tiempos personalizados por rutina (persistentes) ---
+     Cada entrada guarda { t: tiempo en s, s: si cambia de lado }. Se admite el
+     formato antiguo (solo un número = el tiempo) por compatibilidad con
+     entrenamientos guardados antes de añadir "cambiar de lado". */
+  function timesKey(r) { return "clistenia.times." + r.id; }
+  function applySavedTimes(r) {
+    const saved = storeGet(timesKey(r), null);
+    if (Array.isArray(saved) && saved.length === r.exercises.length) {
+      r.exercises.forEach((e, i) => {
+        const entry = saved[i];
+        let t, sides;
+        if (entry && typeof entry === "object") { t = entry.t; sides = entry.s; }
+        else { t = entry; sides = false; } // formato antiguo: solo el tiempo
+        const v = Math.round(Number(t));
+        if (!isNaN(v) && v >= MIN_TIME) e.time = v;
+        e.sides = !!sides;
+      });
+    } else {
+      r.exercises.forEach(e => { if (e.sides === undefined) e.sides = false; });
+    }
+  }
+  function saveTimes(r) {
+    storeSet(timesKey(r), r.exercises.map(e => ({ t: e.time, s: !!e.sides })));
+  }
+
+  /* --- Historial de entrenamientos realizados --- */
+  function getHistory() { return storeGet("clistenia.history", []); }
+  function addHistory(entry) {
+    const h = getHistory();
+    h.unshift(entry);
+    if (h.length > 300) h.length = 300;
+    return storeSet("clistenia.history", h);
+  }
+  function deleteHistory(ts) {
+    storeSet("clistenia.history", getHistory().filter(e => e.date !== ts));
+  }
+  function clearHistory() { storeSet("clistenia.history", []); }
+
+  /* =========================================================================
+     ILUSTRACIONES ANIMADAS por "pose" (figuras minimalistas propias).
+     Cada postura es una figura ARTICULADA: la cabeza (head) y cada parte del
+     cuerpo (parts) definen su posición inicial y final del movimiento. El SVG
+     interpola entre ambas con <animate> (SMIL, nativo del navegador), creando
+     un movimiento continuo y fluido en bucle. Sin librerías ni imágenes.
+     - head: [[cx,cy] inicial, [cx,cy] final]
+     - parts: pares [trazo inicial, trazo final]; ambos trazos deben tener la
+       misma estructura de comandos (M/L) para que la interpolación funcione.
+     ========================================================================= */
+  const POSES = {
+    plank: { // sierra/plancha: el cuerpo se desliza sobre los apoyos
+      head: [[13, 31], [17, 31]],
+      parts: [
+        ["M16 33 L50 43", "M20 33 L54 44"],   // cuerpo
+        ["M16 33 L16 48", "M20 33 L20 48"],   // antebrazo
+        ["M50 43 L50 50", "M54 44 L54 50"]    // pies
+      ]
+    },
+    sideplank: { // plancha lateral: la cadera sube y baja
+      head: [[16, 20], [16, 25]],
+      parts: [
+        ["M18 22 L34 33 L50 45", "M18 27 L34 41 L50 45"], // cuerpo (cadera al centro)
+        ["M18 22 L20 46", "M18 27 L20 46"]                // brazo de apoyo
+      ]
+    },
+    abs: { // crunch: el tronco sube hacia las rodillas y baja
+      head: [[46, 37], [39, 29]],
+      parts: [
+        ["M44 39 L28 41", "M37 31 L28 41"],               // tronco
+        ["M28 41 L24 32 L18 41", "M28 41 L24 32 L18 41"], // piernas flexionadas
+        ["M44 39 L38 37", "M37 31 L31 30"]                // brazos
+      ]
+    },
+    legraise: { // elevación de piernas: suben y bajan
+      head: [[12, 40], [12, 40]],
+      parts: [
+        ["M14 41 L40 42", "M14 41 L40 42"],   // tronco tumbado
+        ["M40 42 L54 44", "M40 42 L46 24"]    // piernas
+      ]
+    },
+    squat: { // sentadilla: de pie y abajo
+      head: [[32, 12], [32, 19]],
+      parts: [
+        ["M32 16 L32 30", "M32 23 L32 34"],               // tronco
+        ["M32 22 L21 28", "M32 26 L21 22"],               // brazo izq
+        ["M32 22 L43 28", "M32 26 L43 22"],               // brazo dcho
+        ["M32 30 L26 40 L26 50", "M32 34 L22 41 L22 50"], // pierna izq
+        ["M32 30 L38 40 L38 50", "M32 34 L42 41 L42 50"]  // pierna dcha
+      ]
+    },
+    pushup: { // flexión: baja flexionando el codo y sube
+      head: [[13, 33], [13, 39]],
+      parts: [
+        ["M16 35 L48 43", "M16 41 L48 47"],               // cuerpo
+        ["M16 35 L16 42 L16 49", "M16 41 L11 45 L16 49"], // brazo (codo)
+        ["M48 43 L48 50", "M48 47 L48 51"]                // pies
+      ]
+    },
+    pike: { // triángulo / flexión pike: la cabeza baja entre las manos
+      head: [[16, 42], [16, 48]],
+      parts: [
+        ["M18 41 L34 18", "M18 47 L34 21"],   // espalda
+        ["M34 18 L50 44", "M34 21 L50 45"],   // piernas
+        ["M50 44 L50 50", "M50 45 L50 51"]    // pies
+      ]
+    },
+    bridge: { // puente de glúteos / tabla inversa: la cadera sube y baja
+      head: [[52, 44], [52, 44]],
+      parts: [
+        ["M48 45 L30 47", "M48 45 L30 39"],   // tronco (cadera)
+        ["M30 47 L20 46", "M30 39 L20 44"],   // muslos
+        ["M20 46 L20 51", "M20 44 L20 51"]    // piernas
+      ]
+    },
+    superman: { // superman/nadador: brazos y piernas se elevan
+      head: [[48, 28], [48, 23]],
+      parts: [
+        ["M46 29 L18 40", "M46 24 L18 37"],   // cuerpo
+        ["M46 29 L37 31", "M46 24 L36 18"],   // brazos
+        ["M18 40 L9 42", "M18 37 L9 30"]      // piernas
+      ]
+    },
+    quadruped: { // a cuatro patas / bird-dog: extiende brazo y pierna opuestos
+      head: [[14, 24], [14, 24]],
+      parts: [
+        ["M16 26 L44 30", "M16 26 L44 30"],   // espalda
+        ["M18 27 L18 46", "M17 26 L6 18"],    // brazo que se extiende
+        ["M24 28 L24 46", "M24 28 L24 46"],   // brazo de apoyo
+        ["M40 30 L40 46", "M40 30 L40 46"],   // pierna de apoyo
+        ["M44 30 L44 46", "M44 30 L57 24"]    // pierna que se extiende
+      ]
+    },
+    twist: { // torsión de tronco: gira a un lado y al otro
+      head: [[32, 16], [32, 16]],
+      parts: [
+        ["M32 20 L33 34", "M32 20 L31 34"],   // tronco
+        ["M31 26 L19 30", "M33 26 L45 30"],   // brazos (giran de lado a lado)
+        ["M33 34 L25 45", "M31 34 L24 43"],   // pierna izq
+        ["M33 34 L40 44", "M31 34 L39 46"]    // pierna dcha
+      ]
+    },
+    rotation: { // flexión con rotación: de plancha a postura en T
+      head: [[20, 36], [21, 33]],
+      parts: [
+        ["M22 38 L46 44", "M23 35 L46 42"],   // cuerpo
+        ["M22 38 L22 50", "M25 36 L25 50"],   // brazo de apoyo
+        ["M22 41 L24 47", "M28 36 L30 16"],   // brazo libre (se abre al techo)
+        ["M46 44 L46 50", "M46 42 L46 50"]    // pies
+      ]
+    },
+    standing: { // de pie (jumping jack): brazos y piernas se abren
+      head: [[32, 13], [32, 13]],
+      parts: [
+        ["M32 17 L32 38", "M32 17 L32 38"],   // tronco
+        ["M32 23 L21 31", "M32 22 L22 10"],   // brazo izq (sube)
+        ["M32 23 L43 31", "M32 22 L42 10"],   // brazo dcho (sube)
+        ["M32 38 L27 52", "M32 38 L24 52"],   // pierna izq (se abre)
+        ["M32 38 L37 52", "M32 38 L40 52"]    // pierna dcha (se abre)
+      ]
+    },
+    stretch: { // estiramiento: erguido e inclinación lateral suave
+      head: [[32, 13], [36, 15]],
+      parts: [
+        ["M32 17 L32 36", "M35 19 L30 36"],   // tronco (se inclina)
+        ["M32 21 L43 12", "M35 22 L47 17"],   // brazo arriba
+        ["M32 25 L22 21", "M34 26 L26 23"],   // brazo abajo
+        ["M32 36 L26 50", "M30 36 L25 50"],   // pierna izq
+        ["M32 36 L38 50", "M30 36 L36 50"]    // pierna dcha
+      ]
+    },
+    dip: { // fondos de tríceps: el cuerpo baja flexionando codos y sube
+      head: [[40, 16], [40, 23]],
+      parts: [
+        ["M40 20 L40 32", "M40 27 L40 37"],               // tronco
+        ["M40 24 L50 29 L58 29", "M40 31 L48 29 L58 29"], // brazo al apoyo
+        ["M40 32 L26 35", "M40 37 L26 39"],               // muslos
+        ["M26 35 L20 45", "M26 39 L20 47"]                // piernas
+      ]
+    },
+    windmill: { // molinillo: la mano baja a un pie y al otro
+      head: [[30, 14], [30, 14]],
+      parts: [
+        ["M30 18 L32 30", "M30 18 L32 30"],   // tronco
+        ["M31 24 L24 45", "M31 24 L40 45"],   // brazo que baja al pie
+        ["M31 22 L45 11", "M31 22 L17 11"],   // brazo que sube
+        ["M32 30 L26 50", "M32 30 L26 50"],   // pierna izq
+        ["M32 30 L40 50", "M32 30 L40 50"]    // pierna dcha
+      ]
+    }
+  };
+
+  /* Respeta la preferencia del sistema "reducir movimiento": figura estática. */
+  const REDUCED_MOTION = !!(window.matchMedia &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  /* Duración de un ciclo de movimiento (ida y vuelta), en segundos. */
+  const FIG_DUR = 1.6;
+
+  /* Construye el SVG animado de una postura: cada parte interpola entre su
+     posición inicial y final con <animate> (SMIL), en bucle ida-y-vuelta con
+     suavizado, lo que produce un movimiento continuo y fluido. */
+  function iconForPose(pose) {
+    const p = POSES[pose] || POSES.standing;
+    const anim = (attr, v1, v2) => (REDUCED_MOTION || v1 === v2) ? "" :
+      `<animate attributeName="${attr}" values="${v1};${v2};${v1}" dur="${FIG_DUR}s" ` +
+      `repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" ` +
+      `keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>`;
+
+    const [h1, h2] = p.head;
+    let out = `<svg viewBox="0 0 64 64" class="anim-fig" aria-hidden="true">`
+      + `<g fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">`
+      + `<circle cx="${h1[0]}" cy="${h1[1]}" r="4.5" fill="currentColor" stroke="none">`
+      + anim("cx", h1[0], h2[0]) + anim("cy", h1[1], h2[1])
+      + `</circle>`;
+    for (const [a, b] of p.parts) {
+      out += `<path d="${a}">` + anim("d", a, b) + `</path>`;
+    }
+    out += `</g></svg>`;
+    return out;
+  }
+
+  /* SVG de músculo / chip helper */
+  function muscleTags(muscles) {
+    return muscles.map(m => `<span class="tag">${esc(m)}</span>`).join("");
+  }
+
+  /* ---------------- utilidades ---------------- */
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+  }
+  function fmt(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return m > 0 ? `${m}:${String(s).padStart(2, "0")}` : `${s}`;
+  }
+  function fmtLong(sec) {
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    if (m === 0) return `${s} s`;
+    if (s === 0) return `${m} min`;
+    return `${m} min ${s} s`;
+  }
+  function routineTotal(r) {
+    return r.exercises.reduce((a, e) => a + e.time, 0);
+  }
+  /* Reparte el tiempo de un ejercicio "cambiar de lado" en dos mitades.
+     La primera mitad se queda con el segundo "extra" si el total es impar
+     (p. ej. 31s -> 16s + 15s), para no perder ningún segundo. */
+  function splitHalves(total) {
+    const a = Math.ceil(total / 2);
+    return [a, total - a];
+  }
+  function fmtDate(ts) {
+    try {
+      return new Date(ts).toLocaleString("es-ES", {
+        weekday: "short", day: "numeric", month: "short", year: "numeric",
+        hour: "2-digit", minute: "2-digit"
+      });
+    } catch (e) { return new Date(ts).toLocaleString(); }
+  }
+
+  /* =========================================================================
+     ROUTER
+     ========================================================================= */
+  function go(view, opts) {
+    opts = opts || {};
+    state.view = view;
+    if (opts.routine !== undefined) state.routine = opts.routine;
+    if (opts.exerciseName !== undefined) state.exerciseName = opts.exerciseName;
+    render();
+    window.scrollTo({ top: 0, behavior: "instant" in window ? "instant" : "auto" });
+  }
+
+  function render() {
+    backBtn.classList.toggle("show", state.view !== "home");
+    if (state.view === "home")      { titleEl.textContent = ""; renderHome(); }
+    else if (state.view === "routine")  { titleEl.textContent = state.routine.name; renderRoutine(); }
+    else if (state.view === "exercise") { titleEl.textContent = state.routine.name; renderExercise(); }
+    else if (state.view === "history")  { titleEl.textContent = "Historial"; renderHistory(); }
+  }
+
+  backBtn.addEventListener("click", () => {
+    if (state.view === "exercise") go("routine");
+    else go("home");
+  });
+  function goHome() { go("home"); }
+  document.getElementById("brandHome").addEventListener("click", goHome);
+  document.getElementById("brandHome").addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") goHome();
+  });
+
+  /* =========================================================================
+     VISTA: HOME
+     ========================================================================= */
+  function renderHome() {
+    const cards = ROUTINES.map(r => {
+      const total = routineTotal(r);
+      return `
+        <button class="routine-card" data-routine="${r.id}" style="--rc-accent:${r.accent}">
+          <div class="rc-icon">${r.icon}</div>
+          <h3 class="rc-name">${esc(r.name)}</h3>
+          <p class="rc-sub">${esc(r.subtitle)}</p>
+          <div class="rc-meta">
+            <span><b>${r.exercises.length}</b> ejercicios</span>
+            <span class="dot"></span>
+            <span><b>${fmtLong(total)}</b></span>
+          </div>
+        </button>`;
+    }).join("");
+
+    const hist = getHistory();
+    appEl.innerHTML = `
+      <div class="page-head page-head-row">
+        <div>
+          <h1>Tus entrenamientos</h1>
+          <p>Calistenia en casa, sin material. Elige una rutina, ajusta los tiempos y dale.</p>
+        </div>
+        <button class="btn" id="historyBtn" title="Ver tus entrenamientos realizados">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l3 3"/></svg>
+          Historial${hist.length ? ` · ${hist.length}` : ""}
+        </button>
+      </div>
+      <div class="routine-grid">${cards}</div>
+    `;
+
+    appEl.querySelectorAll(".routine-card").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const r = ROUTINES.find(x => x.id === btn.dataset.routine);
+        go("routine", { routine: r });
+      });
+    });
+    document.getElementById("historyBtn").addEventListener("click", () => go("history"));
+  }
+
+  /* =========================================================================
+     VISTA: HISTORIAL de entrenamientos realizados
+     ========================================================================= */
+  function renderHistory() {
+    const hist = getHistory();
+
+    if (!hist.length) {
+      appEl.innerHTML = `
+        <div class="page-head"><h1>Historial</h1>
+          <p>Aquí aparecerán los entrenamientos que vayas completando, con su fecha.</p></div>
+        <div class="empty-box">
+          <div class="empty-emoji">📋</div>
+          <p>Todavía no has completado ningún entrenamiento.<br>Cuando termines uno, se guardará aquí.</p>
+          <button class="btn primary" id="emptyGo">Elegir un entrenamiento</button>
+        </div>`;
+      document.getElementById("emptyGo").addEventListener("click", () => go("home"));
+      return;
+    }
+
+    const items = hist.map(h => {
+      const exList = (h.exercises || []).map(e => `<li>${esc(e.name)} <span>${e.time}s</span></li>`).join("");
+      return `
+        <div class="hist-card">
+          <div class="hist-head" data-ts="${h.date}">
+            <div class="hist-icon">${h.icon || "💪"}</div>
+            <div class="hist-info">
+              <div class="hist-routine">${esc(h.routine)}</div>
+              <div class="hist-date">${fmtDate(h.date)}</div>
+            </div>
+            <div class="hist-meta"><b>${h.count}</b> ej · <b>${fmtLong(h.total)}</b></div>
+            <button class="hist-del" data-del="${h.date}" title="Borrar este registro" aria-label="Borrar">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+            </button>
+          </div>
+          <ul class="hist-ex" data-list="${h.date}" hidden>${exList}</ul>
+        </div>`;
+    }).join("");
+
+    appEl.innerHTML = `
+      <div class="page-head page-head-row">
+        <div><h1>Historial</h1><p>${hist.length} entrenamiento${hist.length === 1 ? "" : "s"} completado${hist.length === 1 ? "" : "s"}. Toca uno para ver los ejercicios.</p></div>
+        <button class="btn ghost" id="clearHist" title="Borrar todo el historial">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
+          Borrar todo
+        </button>
+      </div>
+      <div class="hist-list">${items}</div>`;
+
+    // Desplegar/plegar ejercicios de cada registro
+    appEl.querySelectorAll(".hist-head").forEach(head => {
+      head.addEventListener("click", (e) => {
+        if (e.target.closest(".hist-del")) return;
+        const list = appEl.querySelector(`[data-list="${head.dataset.ts}"]`);
+        if (list) list.hidden = !list.hidden;
+      });
+    });
+    // Borrar un registro
+    appEl.querySelectorAll("[data-del]").forEach(b => {
+      b.addEventListener("click", () => { deleteHistory(Number(b.dataset.del)); renderHistory(); });
+    });
+    // Borrar todo
+    document.getElementById("clearHist").addEventListener("click", () => {
+      if (window.confirm("¿Borrar todo el historial de entrenamientos?")) { clearHistory(); renderHistory(); }
+    });
+  }
+
+  /* =========================================================================
+     VISTA: DETALLE DE RUTINA (con editor de tiempo por ejercicio)
+     ========================================================================= */
+  function renderRoutine() {
+    const r = state.routine;
+    applySavedTimes(r);   // recupera los tiempos personalizados guardados (si los hay)
+    const authorHtml = r.author
+      ? `<div class="author">${esc(r.author.name)} <span class="handle">${esc(r.author.handle)}</span></div>`
+      : `<div class="sub">${esc(r.subtitle)}</div>`;
+
+    const rows = r.exercises.map((ex, i) => {
+      const def = EXERCISES[ex.name] || { pose: "standing", muscles: [] };
+      const [halfA, halfB] = splitHalves(ex.time);
+      const sideTitle = ex.sides
+        ? `Partido en dos mitades: ${halfA}s + ${halfB}s, con ${settings.sideSwitch}s para cambiar de posición`
+        : "Divide el tiempo en dos mitades (lado 1 / lado 2) con una pausa para cambiar de posición";
+      return `
+        <div class="ex-row" data-i="${i}">
+          <div class="ex-index">${i + 1}</div>
+          <div class="ex-icon">${iconForPose(def.pose)}</div>
+          <div class="ex-main" data-open="${i}">
+            <div class="ex-name">${esc(ex.name)}</div>
+            <div class="ex-muscles">${muscleTags((def.muscles || []).slice(0, 3))}</div>
+          </div>
+          <button class="side-toggle${ex.sides ? " on" : ""}" data-side-i="${i}"
+                  title="${esc(sideTitle)}" aria-pressed="${ex.sides ? "true" : "false"}">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/>
+              <path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+            </svg>
+            Cambiar de lado
+          </button>
+          <div class="time-editor" data-i="${i}">
+            <button class="tbtn minus" title="Menos tiempo (mín. ${MIN_TIME}s)" aria-label="Reducir tiempo">−</button>
+            <input class="tinput" type="number" min="${MIN_TIME}" step="${TIME_STEP}" value="${ex.time}" aria-label="Segundos del ejercicio ${i + 1}">
+            <span class="unit">seg</span>
+            <button class="tbtn plus" title="Más tiempo" aria-label="Aumentar tiempo">+</button>
+          </div>
+        </div>`;
+    }).join("");
+
+    appEl.innerHTML = `
+      <div class="routine-header" style="--rc-accent:${r.accent}">
+        <div class="rh-icon">${r.icon}</div>
+        <div class="rh-text">
+          <h1>${esc(r.name)}</h1>
+          ${authorHtml}
+        </div>
+      </div>
+
+      <div class="routine-actions">
+        <div class="total">Duración total · <b id="totalTime">${fmtLong(routineTotal(r))}</b></div>
+        <div class="rest-setting" title="Segundos de descanso/transición entre un ejercicio y el siguiente">
+          <span class="rest-label">⏸ Descanso entre ejercicios</span>
+          <div class="time-editor" id="restEditor">
+            <button class="tbtn minus" aria-label="Menos descanso">−</button>
+            <input class="tinput" id="restInput" type="number" min="${MIN_TRANSITION}" max="${MAX_TRANSITION}" step="${TRANSITION_STEP}" value="${settings.transition}" aria-label="Segundos de descanso entre ejercicios">
+            <span class="unit">seg</span>
+            <button class="tbtn plus" aria-label="Más descanso">+</button>
+          </div>
+        </div>
+        <div class="rest-setting" title="Segundos de pausa para cambiar de posición en los ejercicios marcados con 🔄 Cambiar de lado">
+          <span class="rest-label">🔄 Cambio de lado</span>
+          <div class="time-editor" id="sideSwitchEditor">
+            <button class="tbtn minus" aria-label="Menos tiempo de cambio de lado">−</button>
+            <input class="tinput" id="sideSwitchInput" type="number" min="${MIN_SIDE_SWITCH}" max="${MAX_SIDE_SWITCH}" step="${SIDE_SWITCH_STEP}" value="${settings.sideSwitch}" aria-label="Segundos para cambiar de lado">
+            <span class="unit">seg</span>
+            <button class="tbtn plus" aria-label="Más tiempo de cambio de lado">+</button>
+          </div>
+        </div>
+        <div class="spacer"></div>
+        <button class="btn ghost" id="resetTimes" title="Volver a ${DEFAULT_TIME}s por ejercicio y quitar los cambios de lado">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Reiniciar tiempos
+        </button>
+        <button class="btn primary" id="startBtn">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          Empezar entrenamiento
+        </button>
+      </div>
+
+      <div class="section-label">${r.exercises.length} ejercicios</div>
+      <div class="ex-list">${rows}</div>
+
+      <div class="hint">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
+        Tiempo mínimo ${MIN_TIME} s por ejercicio. Ajústalo con − / + o escribiendo. Marca 🔄 <b>Cambiar de lado</b> en un ejercicio para partir su tiempo en dos mitades (lado 1 / lado 2) con una pausa para reposicionarte. Pulsa un ejercicio para ver cómo se hace.
+      </div>
+    `;
+
+    // Abrir detalle de ejercicio
+    appEl.querySelectorAll("[data-open]").forEach(el => {
+      el.addEventListener("click", () => {
+        const i = parseInt(el.dataset.open, 10);
+        go("exercise", { exerciseName: r.exercises[i].name });
+      });
+    });
+
+    // Editor de tiempo (SOLO los de ejercicio: tienen data-i; así se excluye
+    // el control de descanso "#restEditor", que comparte la clase .time-editor).
+    appEl.querySelectorAll(".time-editor[data-i]").forEach(ed => {
+      const i = parseInt(ed.dataset.i, 10);
+      const input = ed.querySelector(".tinput");
+      const minus = ed.querySelector(".minus");
+      const plus  = ed.querySelector(".plus");
+
+      function setTime(val, fromInput) {
+        let v = Math.round(val);
+        if (isNaN(v)) v = DEFAULT_TIME;
+        if (v < MIN_TIME) v = MIN_TIME;   // mínimo 30 s; sin tope por arriba (sube lo que quieras)
+        r.exercises[i].time = v;
+        if (!fromInput) input.value = v;
+        minus.disabled = v <= MIN_TIME;
+        updateTotal();
+        updateSideTitle(i);
+        saveTimes(r);                     // recuerda el tiempo personalizado
+      }
+      minus.addEventListener("click", () => setTime(r.exercises[i].time - TIME_STEP, false));
+      plus.addEventListener("click",  () => setTime(r.exercises[i].time + TIME_STEP, false));
+      input.addEventListener("input", () => {
+        const v = parseInt(input.value, 10);
+        if (!isNaN(v)) { r.exercises[i].time = Math.max(MIN_TIME, v); updateTotal(); updateSideTitle(i); minus.disabled = r.exercises[i].time <= MIN_TIME; saveTimes(r); }
+      });
+      input.addEventListener("blur", () => setTime(parseInt(input.value, 10), false));
+      // estado inicial del botón menos
+      minus.disabled = r.exercises[i].time <= MIN_TIME;
+    });
+
+    function updateTotal() {
+      const t = document.getElementById("totalTime");
+      if (t) t.textContent = fmtLong(routineTotal(r));
+    }
+
+    // Actualiza el tooltip del interruptor "cambiar de lado" de un ejercicio
+    // con el reparto de tiempo vigente (cambia si se edita el tiempo del
+    // ejercicio o el ajuste global de segundos de cambio de lado).
+    function updateSideTitle(i) {
+      const btn = appEl.querySelector(`.side-toggle[data-side-i="${i}"]`);
+      if (!btn) return;
+      const ex = r.exercises[i];
+      const [halfA, halfB] = splitHalves(ex.time);
+      btn.title = ex.sides
+        ? `Partido en dos mitades: ${halfA}s + ${halfB}s, con ${settings.sideSwitch}s para cambiar de posición`
+        : "Divide el tiempo en dos mitades (lado 1 / lado 2) con una pausa para cambiar de posición";
+    }
+
+    // Interruptor "cambiar de lado" por ejercicio
+    appEl.querySelectorAll("[data-side-i]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.sideI, 10);
+        const ex = r.exercises[i];
+        ex.sides = !ex.sides;
+        btn.classList.toggle("on", ex.sides);
+        btn.setAttribute("aria-pressed", ex.sides ? "true" : "false");
+        updateSideTitle(i);
+        saveTimes(r);
+      });
+    });
+
+    // Control del descanso/transición entre ejercicios (ajuste global del usuario)
+    (function () {
+      const ed = document.getElementById("restEditor");
+      const input = ed.querySelector("#restInput");
+      const minus = ed.querySelector(".minus");
+      const plus  = ed.querySelector(".plus");
+      function apply(v, fromInput) {
+        const val = saveTransition(v);
+        if (!fromInput) input.value = val;
+        minus.disabled = val <= MIN_TRANSITION;
+        plus.disabled  = val >= MAX_TRANSITION;
+      }
+      minus.addEventListener("click", () => apply(settings.transition - TRANSITION_STEP, false));
+      plus.addEventListener("click",  () => apply(settings.transition + TRANSITION_STEP, false));
+      input.addEventListener("input", () => { const v = parseInt(input.value, 10); if (!isNaN(v)) apply(v, true); });
+      input.addEventListener("blur",  () => apply(parseInt(input.value, 10), false));
+      minus.disabled = settings.transition <= MIN_TRANSITION;
+      plus.disabled  = settings.transition >= MAX_TRANSITION;
+    })();
+
+    // Control de la pausa para "cambiar de lado" (ajuste global del usuario)
+    (function () {
+      const ed = document.getElementById("sideSwitchEditor");
+      const input = ed.querySelector("#sideSwitchInput");
+      const minus = ed.querySelector(".minus");
+      const plus  = ed.querySelector(".plus");
+      function apply(v, fromInput) {
+        const val = saveSideSwitch(v);
+        if (!fromInput) input.value = val;
+        minus.disabled = val <= MIN_SIDE_SWITCH;
+        plus.disabled  = val >= MAX_SIDE_SWITCH;
+        r.exercises.forEach((_, i) => updateSideTitle(i));
+      }
+      minus.addEventListener("click", () => apply(settings.sideSwitch - SIDE_SWITCH_STEP, false));
+      plus.addEventListener("click",  () => apply(settings.sideSwitch + SIDE_SWITCH_STEP, false));
+      input.addEventListener("input", () => { const v = parseInt(input.value, 10); if (!isNaN(v)) apply(v, true); });
+      input.addEventListener("blur",  () => apply(parseInt(input.value, 10), false));
+      minus.disabled = settings.sideSwitch <= MIN_SIDE_SWITCH;
+      plus.disabled  = settings.sideSwitch >= MAX_SIDE_SWITCH;
+    })();
+
+    document.getElementById("resetTimes").addEventListener("click", () => {
+      r.exercises.forEach(e => { e.time = DEFAULT_TIME; e.sides = false; });
+      saveTimes(r);
+      renderRoutine();
+    });
+    document.getElementById("startBtn").addEventListener("click", () => Player.start(r));
+  }
+
+  /* =========================================================================
+     VISTA: DETALLE DE EJERCICIO
+     ========================================================================= */
+  function renderExercise() {
+    const name = state.exerciseName;
+    const def = EXERCISES[name] || { pose: "standing", desc: "", muscles: [], reps: "—", steps: [] };
+    // tiempo configurado para este ejercicio en la rutina activa
+    const inRoutine = state.routine.exercises.find(e => e.name === name);
+    const time = inRoutine ? inRoutine.time : DEFAULT_TIME;
+
+    const steps = (def.steps || []).map((s, i) =>
+      `<li><span class="num">${i + 1}</span><span>${esc(s)}</span></li>`).join("");
+
+    appEl.innerHTML = `
+      <div class="exdetail">
+        <div class="poster">${iconForPose(def.pose)}</div>
+        <div>
+          <h1>${esc(name)}</h1>
+          <p class="lead">${esc(def.desc || "")}</p>
+
+          <div class="info-grid">
+            <div class="info-card"><div class="k">Duración</div><div class="v">${time} s</div></div>
+            <div class="info-card"><div class="k">Repeticiones</div><div class="v">${esc(def.reps || "—")}</div></div>
+            <div class="info-card"><div class="k">Series</div><div class="v">1 por vuelta</div></div>
+          </div>
+
+          <div class="section-label">Músculos trabajados</div>
+          <div class="muscles-row">${muscleTags(def.muscles || [])}</div>
+
+          <div class="section-label">Cómo hacer el ejercicio</div>
+          <ol class="steps">${steps || "<li>—</li>"}</ol>
+        </div>
+      </div>
+    `;
+  }
+
+  /* =========================================================================
+     WEB AUDIO — avisos sonoros sin archivos externos
+     ========================================================================= */
+  const Sound = (function () {
+    /* Cadena de audio: osciladores -> master(ganancia alta) -> compresor -> salida.
+       Objetivo: avisos MUCHO más fuertes y penetrantes para oírlos por encima de
+       música alta con auriculares. Se usan ondas "square" (más cortantes) y un
+       compresor que permite subir el volumen sin distorsión fea. */
+    let ctx = null, master = null, comp = null;
+    function ac() {
+      if (!ctx) {
+        const AC = window.AudioContext || window.webkitAudioContext;
+        if (AC) {
+          ctx = new AC();
+          comp = ctx.createDynamicsCompressor();      // controla picos -> permite más volumen
+          master = ctx.createGain();
+          master.gain.value = 1.0;
+          master.connect(comp);
+          comp.connect(ctx.destination);
+        }
+      }
+      if (ctx && ctx.state === "suspended") ctx.resume();
+      return ctx;
+    }
+    function tone(freq, start, dur, gainPeak, type) {
+      const c = ac();
+      if (!c) return;
+      const t0 = c.currentTime + start;
+      const osc = c.createOscillator();
+      const g = c.createGain();
+      osc.type = type || "sine";
+      osc.frequency.setValueAtTime(freq, t0);
+      g.gain.setValueAtTime(0.0001, t0);
+      g.gain.exponentialRampToValueAtTime(gainPeak, t0 + 0.012);
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+      osc.connect(g).connect(master || c.destination);
+      osc.start(t0);
+      osc.stop(t0 + dur + 0.03);
+    }
+    // Pitido con armónico (octava) para ganar presencia y cortar por encima de la música.
+    function beep(freq, start, dur, gain, type) {
+      tone(freq, start, dur, gain, type);
+      tone(freq * 2, start, dur, gain * 0.55, type);
+    }
+    return {
+      unlock() { ac(); },            // desbloquea el audio tras interacción del usuario
+      // Segundos 10..4: aviso FUERTE y penetrante (antes casi no se oía).
+      warn()  { beep(780, 0, 0.16, 0.85, "square"); },
+      // Cuenta final 3,2,1: aún más fuerte, DOBLE pulso para que sea inconfundible.
+      tick()  { beep(1050, 0, 0.13, 1.0, "square"); beep(1050, 0.16, 0.13, 1.0, "square"); },
+      // Cambio de ejercicio: señal larga y potente.
+      go()    { beep(1250, 0, 0.45, 1.0, "square"); },
+      // Fin del entrenamiento: fanfarria clara.
+      finish() {
+        tone(659,  0,    0.22, 0.8, "triangle");
+        tone(880,  0.18, 0.22, 0.8, "triangle");
+        tone(1318, 0.40, 0.55, 0.95, "triangle");
+      }
+    };
+  })();
+
+  /* =========================================================================
+     WAKE LOCK — evita que la pantalla se apague/bloquee durante el entrenamiento.
+     Usa la Screen Wake Lock API (navegadores modernos, contexto seguro/HTTPS).
+     Si no está disponible (p. ej. abriendo el archivo como file://), falla en
+     silencio y el móvil se bloqueará como siempre.
+     ========================================================================= */
+  const WakeLock = (function () {
+    let lock = null;
+    let want = false;
+    async function acquire() {
+      want = true;
+      try {
+        if (navigator && "wakeLock" in navigator && navigator.wakeLock) {
+          lock = await navigator.wakeLock.request("screen");
+          lock.addEventListener("release", () => { lock = null; });
+          return true;
+        }
+      } catch (e) { /* denegado o no soportado */ }
+      return false;
+    }
+    async function release() {
+      want = false;
+      try { if (lock) await lock.release(); } catch (e) { /* ignorar */ }
+      lock = null;
+    }
+    // El wake lock se suelta solo si la pestaña pasa a segundo plano:
+    // al volver a estar visible y seguir entrenando, lo volvemos a pedir.
+    try {
+      document.addEventListener("visibilitychange", () => {
+        if (want && !lock && document.visibilityState === "visible") acquire();
+      });
+    } catch (e) { /* ignorar */ }
+    return { acquire, release };
+  })();
+
+  /* =========================================================================
+     FIT PLAYER — ajusta el reproductor a la altura REALMENTE visible.
+     Al salir y volver a la app, el navegador móvil vuelve a mostrar sus barras
+     (p. ej. la inferior de Brave) sin que la página recalcule su altura, y los
+     botones quedaban tapados. Aquí se mide la altura visible y se reaplica al
+     volver (visibilitychange / focus / pageshow), al girar y mientras está abierto.
+     ========================================================================= */
+  const FitPlayer = (function () {
+    let poll = null;
+    function measure() {
+      let h = window.innerHeight || 0;
+      const vv = window.visualViewport;
+      if (vv && vv.height) h = h ? Math.min(h, vv.height) : vv.height;
+      const ch = document.documentElement && document.documentElement.clientHeight;
+      if (ch) h = h ? Math.min(h, ch) : ch;
+      return Math.round(h);
+    }
+    function apply() {
+      if (!playerEl.classList.contains("open")) return;
+      const h = measure();
+      if (!h) return;
+      playerEl.style.height = h + "px";
+      playerEl.style.setProperty("--ph", h + "px");
+      playerEl.classList.toggle("compact", h <= 860);
+      playerEl.classList.toggle("tiny", h <= 640);
+    }
+    // Las barras se animan al reaparecer: reaplicamos varias veces tras el evento.
+    function burst() {
+      apply();
+      [120, 350, 800, 1600].forEach(t => setTimeout(apply, t));
+    }
+    try {
+      window.addEventListener("resize", burst);
+      window.addEventListener("orientationchange", burst);
+      window.addEventListener("focus", burst);
+      window.addEventListener("pageshow", burst);
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible") burst();
+      });
+      if (window.visualViewport) {
+        window.visualViewport.addEventListener("resize", burst);
+        window.visualViewport.addEventListener("scroll", apply);
+      }
+    } catch (e) { /* ignorar */ }
+    return {
+      start() { burst(); clearInterval(poll); poll = setInterval(apply, 700); },
+      stop()  { clearInterval(poll); poll = null; playerEl.style.height = ""; playerEl.style.removeProperty("--ph"); playerEl.classList.remove("compact", "tiny"); },
+      burst
+    };
+  })();
+
+  /* =========================================================================
+     REPRODUCTOR DE ENTRENAMIENTO
+     - Cuenta atrás por ejercicio desde el tiempo configurado.
+     - Pitidos en los últimos 3 s; al llegar a 0 -> aviso y pasa al siguiente.
+     - Pausar / reanudar / anterior / siguiente manual.
+     - Usa marcas de tiempo reales (no acumula desfase).
+     - Mantiene la pantalla encendida mientras dura (WakeLock).
+     ========================================================================= */
+  const Player = (function () {
+    let routine = null;
+    let idx = 0;            // índice del ejercicio actual
+    let remaining = 0;      // segundos restantes (entero, mostrado)
+    let endAt = 0;          // timestamp (ms) en que termina el tramo actual
+    let paused = true;
+    let ticker = null;      // setInterval
+    let lastBeepSecond = -1;
+    let finished = false;
+    let isPrep = false;        // true durante la cuenta atrás de preparación inicial
+    let isTransition = false;  // true durante la transición entre ejercicios
+    let transitionTo = 0;      // índice del ejercicio al que apunta la transición
+    let isSideSwitch = false;  // true durante la pausa de "cambiar de lado"
+    let sidePhase = null;      // "A" | "B" | null: mitad actual del ejercicio (si tiene cambio de lado)
+    let phaseTotal = 0;        // duración total (s) del tramo actual, para el anillo del temporizador
+    const PREP_TIME = 10;      // segundos de preparación al empezar el entrenamiento
+    // La transición entre ejercicios la define el usuario: settings.transition
+    // La pausa para cambiar de lado la define el usuario: settings.sideSwitch
+
+    const RING_R = 130;
+    const RING_C = 2 * Math.PI * RING_R;
+
+    function start(r) {
+      routine = r;
+      idx = 0;
+      finished = false;
+      Sound.unlock();
+      WakeLock.acquire();            // mantener la pantalla encendida durante el entreno
+      buildShell();
+      playerEl.classList.add("open");
+      playerEl.setAttribute("aria-hidden", "false");
+      document.body.style.overflow = "hidden";
+      FitPlayer.start();             // ajustar el reproductor a la altura visible real
+      loadPrep(/*autoplay*/ true);   // primero los 10 s de preparación
+    }
+
+    function buildShell() {
+      playerEl.innerHTML = `
+        <div class="player-top">
+          <button class="pclose" id="pClose" title="Salir (Esc)" aria-label="Salir">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+          <div class="ptitle">${esc(routine.name)}</div>
+          <div class="pcount" id="pCount"></div>
+        </div>
+        <div class="pbar"><div class="pbar-track" id="pBar"></div></div>
+        <div class="player-body" id="pBody"></div>
+      `;
+      document.getElementById("pClose").addEventListener("click", stop);
+      renderBar();
+    }
+
+    function renderBar() {
+      const bar = document.getElementById("pBar");
+      if (!bar) return;
+      // Durante la transición, el "actual" es el próximo ejercicio (transitionTo).
+      const activeIdx = isTransition ? transitionTo : idx;
+      bar.innerHTML = routine.exercises.map((_, i) => {
+        let cls = "pbar-seg";
+        if (i < activeIdx) cls += " done";
+        else if (i === activeIdx && !finished) cls += " current";
+        return `<div class="${cls}"></div>`;
+      }).join("");
+    }
+
+    /* phase: "A" | "B" (opcional) — qué mitad cargar si el ejercicio tiene
+       "cambiar de lado" activado. Si no lo tiene, se ignora. */
+    function loadExercise(i, autoplay, phase) {
+      idx = i;
+      isPrep = false;
+      isTransition = false;
+      isSideSwitch = false;
+      const ex = routine.exercises[i];
+      const def = EXERCISES[ex.name] || { pose: "standing" };
+      const hasSides = !!ex.sides && ex.time >= 2;   // necesita al menos 2 s para partir en dos mitades
+      sidePhase = hasSides ? (phase === "B" ? "B" : "A") : null;
+
+      let segTime = ex.time;
+      if (hasSides) {
+        const [halfA, halfB] = splitHalves(ex.time);
+        segTime = sidePhase === "A" ? halfA : halfB;
+      }
+      remaining = segTime;
+      phaseTotal = segTime;
+      lastBeepSecond = -1;
+      paused = true;
+      playerEl.classList.remove("rest", "finishing");
+
+      let nextHtml;
+      if (hasSides && sidePhase === "A") {
+        nextHtml = `A continuación: <b>cambia de lado</b>`;
+      } else {
+        const next = routine.exercises[i + 1];
+        nextHtml = next
+          ? `Siguiente: <b>${esc(next.name)}</b>`
+          : `Último ejercicio · ¡a por todas!`;
+      }
+
+      const phaseLabel = `Ejercicio ${i + 1} de ${routine.exercises.length}`
+        + (hasSides ? ` · Lado ${sidePhase === "A" ? "1" : "2"} de 2` : "");
+
+      // "Anterior" solo se deshabilita si no hay nada previo a lo que volver
+      // (primer ejercicio, y además no estamos en la 2ª mitad de ese mismo ejercicio).
+      const prevDisabled = (i === 0) && sidePhase !== "B";
+
+      const body = document.getElementById("pBody");
+      body.innerHTML = `
+        <div class="player-phase">${phaseLabel}</div>
+        <div class="player-exname">${esc(ex.name)}</div>
+        <div class="player-fig">${iconForPose(def.pose)}</div>
+        <div class="timer-wrap" id="timerWrap">
+          <svg viewBox="0 0 300 300">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#5b8def"/>
+                <stop offset="100%" stop-color="#38bdf8"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="150" cy="150" r="${RING_R}"/>
+            <circle class="ring-fg" id="ringFg" cx="150" cy="150" r="${RING_R}"
+                    stroke-dasharray="${RING_C}" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-num">
+            <div class="big" id="timerBig">${fmt(remaining)}</div>
+            <div class="lbl">segundos</div>
+          </div>
+        </div>
+        <div class="player-next" id="pNext">${nextHtml}</div>
+        <div class="player-controls">
+          <button class="pctrl side label" id="pPrev" title="Anterior">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6L9 12l11 6z"/></svg>
+            <span class="mini-label">Anterior</span>
+          </button>
+          <button class="pctrl play" id="pPlay" title="Reproducir / Pausar (Espacio)"></button>
+          <button class="pctrl side label" id="pNextBtn" title="Siguiente">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l11 6L4 18z"/></svg>
+            <span class="mini-label">Siguiente</span>
+          </button>
+        </div>
+      `;
+      document.getElementById("pPlay").addEventListener("click", toggle);
+      document.getElementById("pPrev").addEventListener("click", prev);
+      document.getElementById("pNextBtn").addEventListener("click", () => nextExercise(/*manual*/ true));
+      document.getElementById("pPrev").style.opacity = prevDisabled ? ".4" : "1";
+
+      updateRing();
+      updateCount();
+      renderBar();
+      setPlayIcon();
+
+      if (autoplay) play();
+    }
+
+    /* Fase de preparación: 10 s con cuenta atrás acústica antes del 1er ejercicio. */
+    function loadPrep(autoplay) {
+      idx = 0;
+      isPrep = true;
+      isTransition = false;
+      isSideSwitch = false;
+      sidePhase = null;
+      remaining = PREP_TIME;
+      phaseTotal = PREP_TIME;
+      lastBeepSecond = -1;
+      paused = true;
+      finished = false;
+      playerEl.classList.remove("finishing");
+      playerEl.classList.add("rest");   // estética verde "prepárate"
+
+      const first = routine.exercises[0];
+
+      const body = document.getElementById("pBody");
+      body.innerHTML = `
+        <div class="player-phase">Prepárate</div>
+        <div class="player-exname">¿Listo? 🧍</div>
+        <div class="player-fig">${iconForPose("standing")}</div>
+        <div class="timer-wrap" id="timerWrap">
+          <svg viewBox="0 0 300 300">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#2dd4a7"/>
+                <stop offset="100%" stop-color="#38bdf8"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="150" cy="150" r="${RING_R}"/>
+            <circle class="ring-fg" id="ringFg" cx="150" cy="150" r="${RING_R}"
+                    stroke-dasharray="${RING_C}" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-num">
+            <div class="big" id="timerBig">${fmt(remaining)}</div>
+            <div class="lbl">preparación</div>
+          </div>
+        </div>
+        <div class="player-next" id="pNext">Empieza con: <b>${esc(first.name)}</b></div>
+        <div class="player-controls">
+          <button class="pctrl side label" id="pPrev" title="Anterior" style="opacity:.4">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6L9 12l11 6z"/></svg>
+            <span class="mini-label">Anterior</span>
+          </button>
+          <button class="pctrl play" id="pPlay" title="Reproducir / Pausar (Espacio)"></button>
+          <button class="pctrl side label" id="pNextBtn" title="Saltar preparación">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l11 6L4 18z"/></svg>
+            <span class="mini-label">Saltar</span>
+          </button>
+        </div>
+      `;
+      document.getElementById("pPlay").addEventListener("click", toggle);
+      document.getElementById("pNextBtn").addEventListener("click", () => nextExercise(/*manual*/ true));
+
+      updateRing();
+      updateCount();
+      renderBar();
+      setPlayIcon();
+
+      if (autoplay) play();
+    }
+
+    /* Transición entre ejercicios: settings.transition s (ajustable por el
+       usuario) con cuenta atrás acústica para colocarse.
+       toIndex = índice del ejercicio que vendrá a continuación. */
+    function loadTransition(toIndex, autoplay) {
+      isPrep = false;
+      isTransition = true;
+      isSideSwitch = false;
+      sidePhase = null;
+      transitionTo = toIndex;
+      remaining = settings.transition;
+      phaseTotal = settings.transition;
+      lastBeepSecond = -1;
+      paused = true;
+      finished = false;
+      playerEl.classList.remove("finishing");
+      playerEl.classList.add("rest");   // estética verde "descanso/cambio"
+
+      const nextEx = routine.exercises[toIndex];
+      const def = EXERCISES[nextEx.name] || { pose: "standing" };
+
+      const body = document.getElementById("pBody");
+      body.innerHTML = `
+        <div class="player-phase">Descanso · colócate</div>
+        <div class="player-exname">${esc(nextEx.name)}</div>
+        <div class="player-fig">${iconForPose(def.pose)}</div>
+        <div class="timer-wrap" id="timerWrap">
+          <svg viewBox="0 0 300 300">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#2dd4a7"/>
+                <stop offset="100%" stop-color="#38bdf8"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="150" cy="150" r="${RING_R}"/>
+            <circle class="ring-fg" id="ringFg" cx="150" cy="150" r="${RING_R}"
+                    stroke-dasharray="${RING_C}" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-num">
+            <div class="big" id="timerBig">${fmt(remaining)}</div>
+            <div class="lbl">prepárate</div>
+          </div>
+        </div>
+        <div class="player-next" id="pNext">A continuación · ejercicio ${toIndex + 1} de ${routine.exercises.length}</div>
+        <div class="player-controls">
+          <button class="pctrl side label" id="pPrev" title="Volver al ejercicio anterior">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6L9 12l11 6z"/></svg>
+            <span class="mini-label">Anterior</span>
+          </button>
+          <button class="pctrl play" id="pPlay" title="Reproducir / Pausar (Espacio)"></button>
+          <button class="pctrl side label" id="pNextBtn" title="Empezar ya el ejercicio">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l11 6L4 18z"/></svg>
+            <span class="mini-label">Saltar</span>
+          </button>
+        </div>
+      `;
+      document.getElementById("pPlay").addEventListener("click", toggle);
+      document.getElementById("pPrev").addEventListener("click", prev);
+      document.getElementById("pNextBtn").addEventListener("click", () => nextExercise(/*manual*/ true));
+
+      updateRing();
+      updateCount();
+      renderBar();
+      setPlayIcon();
+
+      if (autoplay) play();
+    }
+
+    /* Pausa para "cambiar de lado": settings.sideSwitch s (ajustable por el
+       usuario) en medio de un ejercicio marcado como tal, entre su 1ª y su
+       2ª mitad. i = índice del ejercicio que está en curso (no cambia). */
+    function loadSideSwitch(i, autoplay) {
+      idx = i;
+      isPrep = false;
+      isTransition = false;
+      isSideSwitch = true;
+      sidePhase = null;    // ya no estamos "dentro" de ninguna mitad, sino en la pausa
+      remaining = settings.sideSwitch;
+      phaseTotal = settings.sideSwitch;
+      lastBeepSecond = -1;
+      paused = true;
+      finished = false;
+      playerEl.classList.remove("finishing");
+      playerEl.classList.add("rest");   // estética verde "colócate"
+
+      const ex = routine.exercises[i];
+      const def = EXERCISES[ex.name] || { pose: "standing" };
+
+      const body = document.getElementById("pBody");
+      body.innerHTML = `
+        <div class="player-phase">Ejercicio ${i + 1} de ${routine.exercises.length} · Cambio de lado</div>
+        <div class="player-exname">🔄 ${esc(ex.name)}</div>
+        <div class="player-fig">${iconForPose(def.pose)}</div>
+        <div class="timer-wrap" id="timerWrap">
+          <svg viewBox="0 0 300 300">
+            <defs>
+              <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0%" stop-color="#2dd4a7"/>
+                <stop offset="100%" stop-color="#38bdf8"/>
+              </linearGradient>
+            </defs>
+            <circle class="ring-bg" cx="150" cy="150" r="${RING_R}"/>
+            <circle class="ring-fg" id="ringFg" cx="150" cy="150" r="${RING_R}"
+                    stroke-dasharray="${RING_C}" stroke-dashoffset="0"/>
+          </svg>
+          <div class="timer-num">
+            <div class="big" id="timerBig">${fmt(remaining)}</div>
+            <div class="lbl">cambia de lado</div>
+          </div>
+        </div>
+        <div class="player-next" id="pNext">Segundo lado a continuación</div>
+        <div class="player-controls">
+          <button class="pctrl side label" id="pPrev" title="Volver al primer lado">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zM20 6L9 12l11 6z"/></svg>
+            <span class="mini-label">Anterior</span>
+          </button>
+          <button class="pctrl play" id="pPlay" title="Reproducir / Pausar (Espacio)"></button>
+          <button class="pctrl side label" id="pNextBtn" title="Empezar ya el segundo lado">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 6h2v12h-2zM4 6l11 6L4 18z"/></svg>
+            <span class="mini-label">Saltar</span>
+          </button>
+        </div>
+      `;
+      document.getElementById("pPlay").addEventListener("click", toggle);
+      document.getElementById("pPrev").addEventListener("click", prev);
+      document.getElementById("pNextBtn").addEventListener("click", () => nextExercise(/*manual*/ true));
+
+      updateRing();
+      updateCount();
+      renderBar();
+      setPlayIcon();
+
+      if (autoplay) play();
+    }
+
+    function setPlayIcon() {
+      const b = document.getElementById("pPlay");
+      if (!b) return;
+      b.innerHTML = paused
+        ? `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>`
+        : `<svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg>`;
+    }
+
+    function updateRing() {
+      const ring = document.getElementById("ringFg");
+      const wrap = document.getElementById("timerWrap");
+      if (!ring) return;
+      // phaseTotal se fija en cada load*() con la duración del tramo actual
+      // (preparación, transición, cambio de lado, o la mitad/total del ejercicio).
+      const total = phaseTotal || 1;
+      const frac = Math.max(0, Math.min(1, remaining / total));
+      ring.style.strokeDashoffset = String(RING_C * (1 - frac));
+      const big = document.getElementById("timerBig");
+      if (big) big.textContent = fmt(Math.max(0, remaining));
+      if (wrap) {
+        wrap.classList.toggle("soft-warn", remaining <= 10 && remaining > 3 && !paused);
+        wrap.classList.toggle("warn", remaining <= 3 && remaining > 0 && !paused);
+      }
+    }
+
+    function updateCount() {
+      const c = document.getElementById("pCount");
+      if (!c) return;
+      if (isPrep) c.textContent = "Preparación";
+      else if (isTransition) c.textContent = "Descanso";
+      else if (isSideSwitch) c.textContent = "Cambio de lado";
+      else c.textContent = `${idx + 1} / ${routine.exercises.length}`;
+    }
+
+    function play() {
+      if (finished) return;
+      paused = false;
+      endAt = Date.now() + remaining * 1000;
+      setPlayIcon();
+      clearInterval(ticker);
+      ticker = setInterval(tick, 100);
+      Sound.unlock();
+    }
+
+    function pause() {
+      paused = true;
+      clearInterval(ticker);
+      ticker = null;
+      // congela el restante
+      remaining = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+      setPlayIcon();
+      const wrap = document.getElementById("timerWrap");
+      if (wrap) wrap.classList.remove("warn", "soft-warn");
+    }
+
+    function toggle() { paused ? play() : pause(); }
+
+    function tick() {
+      const msLeft = endAt - Date.now();
+      const secLeft = Math.ceil(msLeft / 1000);
+
+      // Alarma acústica en los últimos 10 segundos: un pitido por segundo.
+      // Suave de 10 a 4, y agudo en la cuenta final 3, 2, 1.
+      if (secLeft <= 10 && secLeft >= 1 && secLeft !== lastBeepSecond) {
+        lastBeepSecond = secLeft;
+        if (secLeft <= 3) Sound.tick();
+        else Sound.warn();
+      }
+
+      if (msLeft <= 0) {
+        remaining = 0;
+        updateRing();
+        // fin del tramo -> aviso y siguiente automático
+        Sound.go();
+        if (isPrep) {
+          loadExercise(0, /*autoplay*/ true);        // preparación -> 1er ejercicio
+        } else if (isTransition) {
+          loadExercise(transitionTo, /*autoplay*/ true); // transición -> próximo ejercicio
+        } else if (isSideSwitch) {
+          loadExercise(idx, /*autoplay*/ true, "B");     // cambio de lado -> 2ª mitad del ejercicio
+        } else if (sidePhase === "A") {
+          // fin de la 1ª mitad -> pausa de cambio de lado (o directa a la 2ª si está a 0 s)
+          if (settings.sideSwitch > 0) loadSideSwitch(idx, /*autoplay*/ true);
+          else loadExercise(idx, /*autoplay*/ true, "B");
+        } else if (idx + 1 < routine.exercises.length) {
+          // ejercicio (completo o su 2ª mitad) -> transición (o directo si el usuario la puso a 0)
+          if (settings.transition > 0) loadTransition(idx + 1, /*autoplay*/ true);
+          else loadExercise(idx + 1, /*autoplay*/ true);
+        } else {
+          finish();                                  // último ejercicio terminado
+        }
+        return;
+      }
+      remaining = secLeft;
+      updateRing();
+    }
+
+    // "Siguiente" manual: salta el tramo actual y avanza al próximo tramo de la secuencia.
+    function nextExercise(manual) {
+      clearInterval(ticker);
+      ticker = null;
+      if (isPrep) {                               // saltar la preparación
+        loadExercise(0, /*autoplay*/ true);
+        return;
+      }
+      if (isTransition) {                         // saltar la transición
+        loadExercise(transitionTo, /*autoplay*/ true);
+        return;
+      }
+      if (isSideSwitch) {                         // saltar la pausa de cambio de lado
+        loadExercise(idx, /*autoplay*/ true, "B");
+        return;
+      }
+      if (sidePhase === "A") {                    // saltar la 1ª mitad -> directo a la 2ª
+        // "Siguiente" siempre avanza al próximo contenido real saltándose
+        // pausas intermedias (igual que ya hacía con prep/transición), así
+        // que aquí se salta también la pausa de cambio de lado.
+        loadExercise(idx, /*autoplay*/ true, "B");
+        return;
+      }
+      if (idx + 1 < routine.exercises.length) {
+        loadExercise(idx + 1, /*autoplay*/ true);
+      } else {
+        finish();
+      }
+    }
+
+    function prev() {
+      clearInterval(ticker);
+      ticker = null;
+      if (isPrep) {
+        loadPrep(!paused);                  // reinicia la preparación
+      } else if (isTransition) {
+        loadExercise(transitionTo - 1, true); // volver al ejercicio recién terminado
+      } else if (isSideSwitch) {
+        loadExercise(idx, true, "A");         // volver a la 1ª mitad del ejercicio actual
+      } else if (sidePhase === "B") {
+        loadExercise(idx, true, "A");         // volver a la 1ª mitad del ejercicio actual
+      } else if (idx === 0) {
+        loadExercise(0, !paused);           // reinicia el ejercicio actual
+      } else {
+        loadExercise(idx - 1, true);
+      }
+    }
+
+    function finish() {
+      finished = true;
+      paused = true;
+      clearInterval(ticker);
+      ticker = null;
+      WakeLock.release();            // entreno terminado: la pantalla puede apagarse
+      playerEl.classList.add("finishing");
+      Sound.finish();
+      renderBar();
+      const total = routineTotal(routine);
+      // Registrar el entrenamiento realizado (fecha + ejercicios + tiempos).
+      addHistory({
+        date: Date.now(),
+        routineId: routine.id,
+        routine: routine.name,
+        icon: routine.icon,
+        count: routine.exercises.length,
+        total: total,
+        exercises: routine.exercises.map(e => ({ name: e.name, time: e.time }))
+      });
+      const body = document.getElementById("pBody");
+      body.innerHTML = `
+        <div class="done-screen">
+          <div class="check">✓</div>
+          <h2>¡Entrenamiento completado!</h2>
+          <p>Has terminado <b>${esc(routine.name)}</b>. Buen trabajo. 💪</p>
+          <div class="done-stats">
+            <div class="s"><div class="n">${routine.exercises.length}</div><div class="t">ejercicios</div></div>
+            <div class="s"><div class="n">${fmtLong(total)}</div><div class="t">tiempo total</div></div>
+          </div>
+          <div style="display:flex; gap:12px;">
+            <button class="btn" id="pRepeat">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+              Repetir
+            </button>
+            <button class="btn primary" id="pFinishClose">Terminar</button>
+          </div>
+        </div>
+      `;
+      const c = document.getElementById("pCount"); if (c) c.textContent = "Completado";
+      document.getElementById("pRepeat").addEventListener("click", () => { finished = false; loadPrep(true); });
+      document.getElementById("pFinishClose").addEventListener("click", stop);
+    }
+
+    function stop() {
+      clearInterval(ticker);
+      ticker = null;
+      paused = true;
+      WakeLock.release();            // dejar que la pantalla pueda apagarse de nuevo
+      FitPlayer.stop();
+      playerEl.classList.remove("open", "rest", "finishing");
+      playerEl.setAttribute("aria-hidden", "true");
+      playerEl.innerHTML = "";
+      document.body.style.overflow = "";
+    }
+
+    function isOpen() { return playerEl.classList.contains("open"); }
+
+    // Atajos de teclado del reproductor
+    document.addEventListener("keydown", e => {
+      if (!isOpen()) return;
+      if (e.key === "Escape") { stop(); }
+      else if (e.code === "Space") { e.preventDefault(); if (!finished) toggle(); }
+      else if (e.key === "ArrowRight") { if (!finished) nextExercise(true); }
+      else if (e.key === "ArrowLeft")  { if (!finished) prev(); }
+    });
+
+    return { start, stop };
+  })();
+
+  /* =========================================================================
+     Arranque
+     ========================================================================= */
+  render();
+})();
+
+  </script>
 </body>
 </html>
