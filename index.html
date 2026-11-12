@@ -501,11 +501,142 @@ body {
   color: var(--accent-2);
 }
 
+/* Botones por ejercicio: "Cambiar" y "Quitar" */
+.row-btn {
+  flex: none;
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 13px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-dim);
+  font-family: inherit;
+  font-size: 12.5px; font-weight: 650;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s, opacity .15s;
+}
+.row-btn svg { width: 15px; height: 15px; flex: none; }
+.row-btn:hover { background: var(--surface-3); color: var(--text); }
+.row-btn.icon-only { padding: 9px 10px; }
+.row-btn.icon-only:hover { background: rgba(239,71,87,.12); color: var(--danger); border-color: var(--danger); }
+.row-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+/* En móvil: el nombre ocupa su propia línea y los botones pasan debajo */
+@media (max-width: 600px) {
+  .ex-row { gap: 10px; padding: 12px; }
+  .ex-row .ex-main { flex: 1 1 calc(100% - 120px); }
+  .ex-row .time-editor { margin-left: auto; }
+}
+
+/* Acciones bajo la lista: añadir ejercicio / restaurar originales */
+.list-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 12px; }
+.add-ex {
+  flex: 1; min-width: 220px;
+  display: inline-flex; align-items: center; justify-content: center; gap: 9px;
+  padding: 14px 18px;
+  border-radius: var(--radius-sm);
+  border: 1.5px dashed #3a4358;
+  background: transparent;
+  color: var(--accent-2);
+  font-family: inherit; font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  transition: background .15s, border-color .15s;
+}
+.add-ex svg { width: 18px; height: 18px; }
+.add-ex:hover { background: rgba(56,189,248,.08); border-color: var(--accent-2); }
+
+/* ===================== Selector de ejercicios (ventana) ===================== */
+.picker {
+  position: fixed; inset: 0;
+  z-index: 90;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+  background: rgba(5,7,11,.72);
+  animation: fade .2s ease;
+}
+.picker-panel {
+  width: 100%; max-width: 620px;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+  display: flex; flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.picker-head { display: flex; align-items: flex-start; gap: 12px; padding: 18px 18px 12px; }
+.picker-titles { flex: 1; min-width: 0; }
+.picker-title { font-size: 19px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+.picker-sub { font-size: 13.5px; color: var(--text-dim); margin-top: 3px; }
+.picker-close {
+  flex: none; width: 38px; height: 38px; border-radius: 11px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+}
+.picker-close:hover { background: var(--surface-2); }
+.picker-search {
+  margin: 0 18px 12px;
+  padding: 11px 14px;
+  border-radius: 11px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  font-family: inherit; font-size: 16px;   /* 16px evita el zoom automático en móvil */
+}
+.picker-search:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+.picker-list {
+  flex: 1; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  padding: 0 10px 14px;
+  display: flex; flex-direction: column; gap: 4px;
+}
+.picker-item {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%; text-align: left;
+  padding: 9px 10px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--text);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background .12s, border-color .12s;
+}
+.picker-item:hover, .picker-item:focus-visible { background: var(--surface-2); border-color: var(--border); outline: none; }
+.picker-icon {
+  flex: none; width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 12px;
+  background: var(--surface-2); border: 1px solid var(--border);
+  color: var(--accent-2);
+}
+.picker-icon svg { width: 34px; height: 34px; }
+.picker-text { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.picker-name { font-size: 15px; font-weight: 700; color: #fff; }
+.picker-muscles { font-size: 12.5px; color: var(--text-faint); }
+.picker-badge {
+  display: inline-block; vertical-align: middle; margin-left: 4px;
+  font-size: 10.5px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase;
+  padding: 2px 7px; border-radius: 999px;
+  background: var(--surface-3); color: var(--text-dim); border: 1px solid var(--border);
+}
+.picker-badge.now { background: rgba(91,141,239,.16); color: var(--accent-2); border-color: var(--accent); }
+.picker-empty { padding: 28px 12px; text-align: center; color: var(--text-dim); font-size: 14.5px; }
+@media (max-width: 600px) {
+  .picker { padding: 8px; align-items: flex-start; }
+  .picker-panel { max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px); }
+  .picker-list { padding-bottom: 72px; }   /* margen por si la barra del navegador tapa el final */
+}
+
 .hint {
   margin-top: 18px;
-  font-size: 13px; color: var(--text-faint);
-  display: flex; align-items: center; gap: 8px;
+  font-size: 13px; color: var(--text-faint); line-height: 1.5;
+  display: flex; align-items: flex-start; gap: 8px;
 }
+.hint svg { flex: none; margin-top: 2px; }
 
 /* ===================== Detalle de ejercicio ===================== */
 .exdetail {
@@ -1827,7 +1958,42 @@ const ROUTINES = [
      formato antiguo (solo un número = el tiempo) por compatibilidad con
      entrenamientos guardados antes de añadir "cambiar de lado". */
   function timesKey(r) { return "clistenia.times." + r.id; }
+
+  /* --- Rutinas personalizadas (persistentes) ---
+     El usuario puede cambiar un ejercicio por otro, añadir y quitar. La lista
+     resultante se guarda en "clistenia.routine.<id>" como [{ n, t, s }]
+     (nombre, tiempo, cambia de lado) y tiene prioridad sobre el formato antiguo
+     "clistenia.times.<id>", que solo guardaba tiempos por posición.
+     r.defaults conserva la lista original para poder restaurarla. */
+  function routineKey(r) { return "clistenia.routine." + r.id; }
+  ROUTINES.forEach(r => { r.defaults = r.exercises.map(e => e.name); });
+  function isCustomRoutine(r) {
+    return r.exercises.length !== r.defaults.length ||
+           r.exercises.some((e, i) => e.name !== r.defaults[i]);
+  }
+  function restoreRoutine(r) {
+    // Vuelve a los ejercicios originales conservando el tiempo y el "cambiar de
+    // lado" de los que siguen existiendo en la lista actual.
+    const pool = r.exercises.slice();
+    r.exercises = r.defaults.map(name => {
+      const k = pool.findIndex(e => e.name === name);
+      if (k >= 0) return pool.splice(k, 1)[0];
+      return { name, time: DEFAULT_TIME, sides: false };
+    });
+    saveTimes(r);
+  }
+
   function applySavedTimes(r) {
+    const custom = storeGet(routineKey(r), null);
+    if (Array.isArray(custom) && custom.length) {
+      const list = [];
+      custom.forEach(x => {
+        if (!x || !EXERCISES[x.n]) return;   // ignora ejercicios que ya no existan
+        const v = Math.round(Number(x.t));
+        list.push({ name: x.n, time: (!isNaN(v) && v >= MIN_TIME) ? v : DEFAULT_TIME, sides: !!x.s });
+      });
+      if (list.length) { r.exercises = list; return; }
+    }
     const saved = storeGet(timesKey(r), null);
     if (Array.isArray(saved) && saved.length === r.exercises.length) {
       r.exercises.forEach((e, i) => {
@@ -1844,7 +2010,7 @@ const ROUTINES = [
     }
   }
   function saveTimes(r) {
-    storeSet(timesKey(r), r.exercises.map(e => ({ t: e.time, s: !!e.sides })));
+    storeSet(routineKey(r), r.exercises.map(e => ({ n: e.name, t: e.time, s: !!e.sides })));
   }
 
   /* --- Historial de entrenamientos realizados --- */
@@ -2022,9 +2188,9 @@ const ROUTINES = [
   /* Construye el SVG animado de una postura: cada parte interpola entre su
      posición inicial y final con <animate> (SMIL), en bucle ida-y-vuelta con
      suavizado, lo que produce un movimiento continuo y fluido. */
-  function iconForPose(pose) {
+  function iconForPose(pose, still) {
     const p = POSES[pose] || POSES.standing;
-    const anim = (attr, v1, v2) => (REDUCED_MOTION || v1 === v2) ? "" :
+    const anim = (attr, v1, v2) => (still || REDUCED_MOTION || v1 === v2) ? "" :
       `<animate attributeName="${attr}" values="${v1};${v2};${v1}" dur="${FIG_DUR}s" ` +
       `repeatCount="indefinite" calcMode="spline" keyTimes="0;0.5;1" ` +
       `keySplines="0.45 0 0.55 1;0.45 0 0.55 1"/>`;
@@ -2224,6 +2390,84 @@ const ROUTINES = [
   }
 
   /* =========================================================================
+     SELECTOR DE EJERCICIOS — ventana con buscador que lista TODOS los ejercicios
+     de la app (los de todas las rutinas). Se usa para cambiar un ejercicio por
+     otro y para añadir ejercicios a una rutina.
+     opts: { title, subtitle, inRoutine: [nombres], currentName, onPick(nombre) }
+     ========================================================================= */
+  function norm(s) {
+    return String(s).toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "");
+  }
+  const ALL_EXERCISES = Object.keys(EXERCISES).sort((a, b) => a.localeCompare(b, "es"));
+  let pickerEl = null;
+
+  function closePicker() {
+    if (!pickerEl) return;
+    if (pickerEl.parentNode) pickerEl.parentNode.removeChild(pickerEl);
+    pickerEl = null;
+    document.body.style.overflow = "";
+  }
+
+  function openPicker(opts) {
+    closePicker();
+    const inRoutine = opts.inRoutine || [];
+    pickerEl = document.createElement("div");
+    pickerEl.className = "picker";
+    pickerEl.innerHTML = `
+      <div class="picker-panel" role="dialog" aria-modal="true" aria-label="${esc(opts.title)}">
+        <div class="picker-head">
+          <div class="picker-titles">
+            <div class="picker-title">${esc(opts.title)}</div>
+            ${opts.subtitle ? `<div class="picker-sub">${esc(opts.subtitle)}</div>` : ""}
+          </div>
+          <button class="picker-close" id="pickerClose" title="Cerrar" aria-label="Cerrar">
+            <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+        <input class="picker-search" id="pickerSearch" type="search" autocomplete="off"
+               placeholder="Buscar por nombre o músculo…" aria-label="Buscar ejercicio">
+        <div class="picker-list" id="pickerList"></div>
+      </div>`;
+    document.body.appendChild(pickerEl);
+    document.body.style.overflow = "hidden";
+
+    const list = pickerEl.querySelector("#pickerList");
+    const search = pickerEl.querySelector("#pickerSearch");
+
+    function draw(q) {
+      const nq = norm(q || "").trim();
+      const html = ALL_EXERCISES.map((name, k) => {
+        const def = EXERCISES[name];
+        if (nq && norm(name + " " + (def.muscles || []).join(" ")).indexOf(nq) === -1) return "";
+        const badge = name === opts.currentName ? `<span class="picker-badge now">Actual</span>`
+          : inRoutine.indexOf(name) !== -1 ? `<span class="picker-badge">En esta rutina</span>` : "";
+        return `
+          <button class="picker-item" data-pick="${k}">
+            <span class="picker-icon">${iconForPose(def.pose, true)}</span>
+            <span class="picker-text">
+              <span class="picker-name">${esc(name)} ${badge}</span>
+              <span class="picker-muscles">${esc((def.muscles || []).slice(0, 3).join(" · "))}</span>
+            </span>
+          </button>`;
+      }).join("");
+      list.innerHTML = html || `<div class="picker-empty">Ningún ejercicio coincide con la búsqueda.</div>`;
+    }
+    draw("");
+
+    search.addEventListener("input", () => draw(search.value));
+    list.addEventListener("click", e => {
+      const b = e.target && e.target.closest ? e.target.closest("[data-pick]") : null;
+      if (!b) return;
+      const name = ALL_EXERCISES[parseInt(b.dataset.pick, 10)];
+      closePicker();
+      if (name) opts.onPick(name);
+    });
+    pickerEl.querySelector("#pickerClose").addEventListener("click", closePicker);
+    pickerEl.addEventListener("click", e => { if (e.target === pickerEl) closePicker(); });
+  }
+  document.addEventListener("keydown", e => { if (pickerEl && e.key === "Escape") closePicker(); });
+
+  /* =========================================================================
      VISTA: DETALLE DE RUTINA (con editor de tiempo por ejercicio)
      ========================================================================= */
   function renderRoutine() {
@@ -2254,6 +2498,16 @@ const ROUTINES = [
               <path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
             </svg>
             Cambiar de lado
+          </button>
+          <button class="row-btn" data-swap-i="${i}" title="Cambiar este ejercicio por otro cualquiera">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M16 3l4 4-4 4"/><path d="M20 7H4"/><path d="M8 21l-4-4 4-4"/><path d="M4 17h16"/>
+            </svg>
+            Cambiar
+          </button>
+          <button class="row-btn icon-only" data-del-i="${i}" title="Quitar este ejercicio de la rutina"
+                  aria-label="Quitar ${esc(ex.name)} de la rutina"${r.exercises.length <= 1 ? " disabled" : ""}>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg>
           </button>
           <div class="time-editor" data-i="${i}">
             <button class="tbtn minus" title="Menos tiempo (mín. ${MIN_TIME}s)" aria-label="Reducir tiempo">−</button>
@@ -2304,14 +2558,82 @@ const ROUTINES = [
         </button>
       </div>
 
-      <div class="section-label">${r.exercises.length} ejercicios</div>
+      <div class="section-label">${r.exercises.length} ejercicios${isCustomRoutine(r) ? " · rutina personalizada" : ""}</div>
       <div class="ex-list">${rows}</div>
+
+      <div class="list-actions">
+        <button class="add-ex" id="addExBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          Añadir ejercicio
+        </button>
+        ${isCustomRoutine(r) ? `
+        <button class="btn ghost" id="restoreRoutine" title="Volver a la lista de ejercicios original de esta rutina">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Restaurar ejercicios originales
+        </button>` : ""}
+      </div>
 
       <div class="hint">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 8v5M12 16h.01"/></svg>
-        Tiempo mínimo ${MIN_TIME} s por ejercicio. Ajústalo con − / + o escribiendo. Marca 🔄 <b>Cambiar de lado</b> en un ejercicio para partir su tiempo en dos mitades (lado 1 / lado 2) con una pausa para reposicionarte. Pulsa un ejercicio para ver cómo se hace.
+        <span>Tiempo mínimo ${MIN_TIME} s por ejercicio. Ajústalo con − / + o escribiendo. Marca 🔄 <b>Cambiar de lado</b> en un ejercicio para partir su tiempo en dos mitades (lado 1 / lado 2) con una pausa para reposicionarte. Con <b>Cambiar</b> sustituyes un ejercicio por cualquier otro de la app, y con <b>Añadir ejercicio</b> sumas uno al final; los cambios se guardan en esta rutina. Pulsa un ejercicio para ver cómo se hace.</span>
       </div>
     `;
+
+    // Cambiar un ejercicio por otro (conserva el tiempo de ese hueco)
+    appEl.querySelectorAll("[data-swap-i]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.swapI, 10);
+        const old = r.exercises[i];
+        if (!old) return;
+        openPicker({
+          title: "Cambiar ejercicio",
+          subtitle: `Sustituir «${old.name}» por…`,
+          inRoutine: r.exercises.map(e => e.name),
+          currentName: old.name,
+          onPick(name) {
+            if (name === old.name) return;
+            r.exercises[i] = { name, time: old.time, sides: false };
+            saveTimes(r);
+            renderRoutine();
+          }
+        });
+      });
+    });
+
+    // Quitar un ejercicio (siempre queda al menos uno)
+    appEl.querySelectorAll("[data-del-i]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.delI, 10);
+        if (r.exercises.length <= 1 || !r.exercises[i]) return;
+        r.exercises.splice(i, 1);
+        saveTimes(r);
+        renderRoutine();
+      });
+    });
+
+    // Añadir un ejercicio al final de la rutina
+    const addBtn = document.getElementById("addExBtn");
+    if (addBtn) addBtn.addEventListener("click", () => {
+      openPicker({
+        title: "Añadir ejercicio",
+        subtitle: `Se añadirá al final de «${r.name}»`,
+        inRoutine: r.exercises.map(e => e.name),
+        onPick(name) {
+          r.exercises.push({ name, time: DEFAULT_TIME, sides: false });
+          saveTimes(r);
+          renderRoutine();
+        }
+      });
+    });
+
+    // Restaurar la lista original de ejercicios
+    const restoreBtn = document.getElementById("restoreRoutine");
+    if (restoreBtn) restoreBtn.addEventListener("click", () => {
+      if (window.confirm("¿Volver a los ejercicios originales de «" + r.name + "»? Se quitarán los que hayas añadido o cambiado.")) {
+        restoreRoutine(r);
+        renderRoutine();
+      }
+    });
 
     // Abrir detalle de ejercicio
     appEl.querySelectorAll("[data-open]").forEach(el => {
@@ -3190,6 +3512,7 @@ const ROUTINES = [
   /* =========================================================================
      Arranque
      ========================================================================= */
+  ROUTINES.forEach(applySavedTimes);   // rutinas personalizadas y tiempos guardados
   render();
 })();
 
