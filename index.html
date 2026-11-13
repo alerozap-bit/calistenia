@@ -732,8 +732,8 @@ body {
   display: flex; gap: 3px;
 }
 .pbar-seg { flex: 1; background: var(--surface-3); border-radius: 999px; transition: background .3s; }
-.pbar-seg.done { background: var(--accent); }
-.pbar-seg.current { background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+.pbar-seg.done { background: #22c55e; }      /* ejercicios completados: verde */
+.pbar-seg.current { background: var(--danger); box-shadow: 0 0 8px rgba(239,71,87,.6); } /* en curso: rojo */
 
 .player-body {
   flex: 1;
